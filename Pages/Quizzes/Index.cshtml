@@ -1,0 +1,23 @@
+﻿@page
+@model QuizApp.Pages.Quizzes.IndexModel
+@{
+    ViewData["Title"] = "Available Quizzes";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row">
+    @foreach (var quiz in Model.Quizzes)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">@quiz.Title</h5>
+                    <p class="card-text">@quiz.Description</p>
+                    <p class="card-text"><small class="text-muted">Time Limit: @quiz.TimeLimit minutes</small></p>
+                    <a asp-page="./Take" asp-route-id="@quiz.Id" class="btn btn-primary">Take Quiz</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,109 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+/* Custom styles for the Quiz App */
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+.question-card {
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.countdown {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Admin dashboard styles */
+.admin-stats-card {
+    border-left: 5px solid;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+}
+
+    .admin-stats-card.primary {
+        border-left-color: #4e73df;
+    }
+
+    .admin-stats-card.success {
+        border-left-color: #1cc88a;
+    }
+
+    .admin-stats-card.info {
+        border-left-color: #36b9cc;
+    }
+
+    .admin-stats-card.warning {
+        border-left-color: #f6c23e;
+    }
+
+    .admin-stats-card:hover {
+        transform: translateY(-2px);
+    }
+
+/* Quiz taking styles */
+.option-group:hover {
+    background-color: rgba(0,0,0,0.03);
+    border-radius: 0.25rem;
+}
+
+/* Style for correct/incorrect answers on result page */
+.correct-answer {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-left: 4px solid #28a745;
+}
+
+.incorrect-answer {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-left: 4px solid #dc3545;
+}
+
+/* Disable back button */
+html {
+    height: 100%;
+    overflow-y: scroll;
+}
+
+.jumbotron {
+    border-radius: 0.5rem;
+}
+
+.disable-link {
+    pointer-events: none;
+    opacity: 0.6;
+}

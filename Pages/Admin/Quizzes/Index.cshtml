@@ -1,0 +1,40 @@
+﻿@page
+@model QuizApp.Pages.Admin.Quizzes.IndexModel
+@{
+    ViewData["Title"] = "Manage Quizzes";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">Create New Quiz</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Time Limit</th>
+            <th>Questions</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var quiz in Model.Quizzes)
+        {
+            <tr>
+                <td>@quiz.Title</td>
+                <td>@quiz.Description</td>
+                <td>@quiz.TimeLimit minutes</td>
+                <td>@quiz.Questions.Count()</td>
+                <td>@quiz.CreatedAt.ToShortDateString()</td>
+                <td>
+                    <a asp-page="./Edit" asp-route-id="@quiz.Id" class="btn btn-sm btn-info">Edit</a>
+                    <a asp-page="./Delete" asp-route-id="@quiz.Id" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

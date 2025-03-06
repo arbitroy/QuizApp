@@ -1,0 +1,41 @@
+﻿@page "{id:int}"
+@model QuizApp.Pages.Quizzes.ResultModel
+@{
+    ViewData["Title"] = "Quiz Results";
+}
+
+<h1>Results for @Model.Quiz.Title</h1>
+
+<div class="alert alert-primary mb-4">
+    <h4>Your score: @Model.Attempt.Score%</h4>
+    <p>Completed on: @Model.Attempt.EndTime?.ToString("f")</p>
+</div>
+
+<a asp-page="./Index" class="btn btn-primary mb-4">Back to Quizzes</a>
+
+<h3>Question Summary</h3>
+
+@foreach (var answer in Model.Attempt.Answers)
+{
+    var question = answer.Question;
+    var selectedOption = question.Options.FirstOrDefault(o => o.Id == answer.SelectedOptionId);
+    var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
+    var isCorrect = selectedOption?.IsCorrect == true;
+
+    <div class="card mb-3 @(isCorrect ? "border-success" : "border-danger")">
+        <div class="card-header">
+            <h5>@question.Text</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Your answer:</strong> @selectedOption?.Text</p>
+
+            @if (!isCorrect)
+            {
+                <p><strong>Correct answer:</strong> @correctOption?.Text</p>
+            }
+        </div>
+        <div class="card-footer text-white @(isCorrect ? "bg-success" : "bg-danger")">
+            @(isCorrect ? "Correct" : "Incorrect")
+        </div>
+    </div>
+}

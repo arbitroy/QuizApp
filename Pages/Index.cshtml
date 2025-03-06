@@ -1,0 +1,99 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="jumbotron text-center mb-4 p-5 bg-light">
+    <h1 class="display-4">Welcome to Quiz App</h1>
+    <p class="lead">Test your knowledge with our collection of quizzes!</p>
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <a asp-page="/Quizzes/Index" class="btn btn-primary btn-lg">View All Quizzes</a>
+    }
+    else
+    {
+        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg">Login</a>
+        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-secondary btn-lg">Register</a>
+    }
+</div>
+
+@if (Model.RecentQuizzes.Any())
+{
+    <h2 class="text-center mb-4">Recent Quizzes</h2>
+
+    <div class="row">
+        @foreach (var quiz in Model.RecentQuizzes)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@quiz.Title</h5>
+                        <p class="card-text">@quiz.Description</p>
+                        <p class="card-text"><small class="text-muted">Time Limit: @quiz.TimeLimit minutes</small></p>
+                    </div>
+                    <div class="card-footer">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <a asp-page="/Quizzes/Take" asp-route-id="@quiz.Id" class="btn btn-primary">Take Quiz</a>
+                        }
+                        else
+                        {
+                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary">Login to Take Quiz</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">User Features</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Take quizzes on various topics</li>
+                    <li class="list-group-item">Track your progress and scores</li>
+                    <li class="list-group-item">Review your quiz history</li>
+                    <li class="list-group-item">Manage your profile</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Admin Features</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Create and manage quizzes</li>
+                    <li class="list-group-item">User management and tracking</li>
+                    <li class="list-group-item">Reset user passwords</li>
+                    <li class="list-group-item">View all activity in the system</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Getting Started</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Register for an account</li>
+                    <li class="list-group-item">Browse available quizzes</li>
+                    <li class="list-group-item">Select a quiz to take</li>
+                    <li class="list-group-item">Submit your answers to get scored</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
