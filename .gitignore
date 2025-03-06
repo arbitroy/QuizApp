@@ -124,3 +124,5 @@ ScaffoldingReadMe.txt
 
 # Project-specific files
 wwwroot/lib/*
+
+Migrations/
