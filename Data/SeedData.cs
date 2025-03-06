@@ -12,15 +12,11 @@ namespace QuizApp.Data
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            // Ensure database is created
-            context.Database.Migrate();
-
-            // Create roles if they don't exist
-            string[] roleNames = { "Administrator", "User" };
-
-            foreach (var roleName in roleNames)
+            // Check if roles already exist before trying to create them
+            if (!await context.Roles.AnyAsync())
             {
-                if (!await roleManager.RoleExistsAsync(roleName))
+                string[] roleNames = { "Administrator", "User" };
+                foreach (var roleName in roleNames)
                 {
                     await roleManager.CreateAsync(new IdentityRole(roleName));
                 }
@@ -49,7 +45,7 @@ namespace QuizApp.Data
             }
 
             // Create sample quiz if none exist
-            if (!context.Quizzes.Any())
+            if (!await context.Quizzes.AnyAsync())
             {
                 var quiz = new Quiz
                 {

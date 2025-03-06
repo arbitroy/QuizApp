@@ -284,3 +284,4 @@ C:\Users\eProd\Git\QuizApp\obj\Debug\net9.0\QuizApp.genruntimeconfig.cache
 C:\Users\eProd\Git\QuizApp\obj\Debug\net9.0\ref\QuizApp.dll
 C:\Users\eProd\Git\QuizApp\bin\Debug\net9.0\Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore.dll
 C:\Users\eProd\Git\QuizApp\obj\Debug\net9.0\compressed\p8d7tdd3wa-2rosibh33g.gz
+C:\Users\eProd\Git\QuizApp\obj\Debug\net9.0\QuizApp.sourcelink.json

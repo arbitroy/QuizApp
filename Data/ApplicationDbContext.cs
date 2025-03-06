@@ -41,11 +41,25 @@ namespace QuizApp.Data
                 .HasForeignKey(qa => qa.QuizId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Change this to restrict to prevent multiple cascade paths
             modelBuilder.Entity<UserAnswer>()
                 .HasOne(ua => ua.QuizAttempt)
                 .WithMany(qa => qa.Answers)
                 .HasForeignKey(ua => ua.QuizAttemptId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Change these to NoAction or ClientSetNull to avoid the multiple cascade paths
+            modelBuilder.Entity<UserAnswer>()
+                .HasOne(ua => ua.Question)
+                .WithMany()
+                .HasForeignKey(ua => ua.QuestionId)
+                .OnDelete(DeleteBehavior.NoAction); // Changed from Cascade
+
+            modelBuilder.Entity<UserAnswer>()
+                .HasOne(ua => ua.SelectedOption)
+                .WithMany()
+                .HasForeignKey(ua => ua.SelectedOptionId)
+                .OnDelete(DeleteBehavior.NoAction); // Changed from Cascade
         }
     }
 }
