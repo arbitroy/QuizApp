@@ -123,4 +123,4 @@ appsettings.*.json
 ScaffoldingReadMe.txt
 
 # Project-specific files
-wwwroot/lib/
+wwwroot/lib/*
