@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace QuizApp.Pages.Dashboard
+namespace  QuizApp.Pages.Admin.Dashboard
 {
     [Authorize]
     public class IndexModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager) : PageModel
