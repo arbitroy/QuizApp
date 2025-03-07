@@ -15,13 +15,13 @@ namespace QuizApp.Pages.Admin.Quizzes
     public class CreateModel(ApplicationDbContext context) : PageModel
     {
         [BindProperty]
-        public InputModel? Input { get; set; }
+        public InputModel Input { get; set; } = new InputModel();
 
         public class InputModel
         {
             [Required]
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at most {1} characters long.", MinimumLength = 3)]
-            public string? Title { get; set; }
+            public string Title { get; set; } = string.Empty;
 
             public string? Description { get; set; }
 
@@ -37,7 +37,7 @@ namespace QuizApp.Pages.Admin.Quizzes
         public class QuestionInput
         {
             [Required]
-            public string? Text { get; set; }
+            public string Text { get; set; } = string.Empty;
 
             [Required]
             [MinLength(2, ErrorMessage = "At least two options are required.")]
@@ -50,7 +50,7 @@ namespace QuizApp.Pages.Admin.Quizzes
         public class OptionInput
         {
             [Required]
-            public string? Text { get; set; }
+            public string Text { get; set; } = string.Empty;
         }
 
         public IActionResult OnGet()
@@ -62,10 +62,11 @@ namespace QuizApp.Pages.Admin.Quizzes
                 {
                     new QuestionInput
                     {
+                        Text = string.Empty,
                         Options = new List<OptionInput>
                         {
-                            new OptionInput(),
-                            new OptionInput()
+                            new OptionInput { Text = string.Empty },
+                            new OptionInput { Text = string.Empty }
                         }
                     }
                 }
@@ -110,7 +111,7 @@ namespace QuizApp.Pages.Admin.Quizzes
                 quiz.Questions.Add(question);
             }
 
-            context.Quizzes.Add(quiz);
+            context.Quizzes?.Add(quiz);
             await context.SaveChangesAsync();
 
             return RedirectToPage("./Index");
