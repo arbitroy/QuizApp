@@ -1,12 +1,14 @@
-﻿@page
-@model QuizApp.Pages.Admin.Quizzes.CreateModel
+@page "{id:int}"
+@model QuizApp.Pages.Admin.Quizzes.EditModel
 @{
-    ViewData["Title"] = "Create Quiz";
+    ViewData["Title"] = "Edit Quiz";
 }
 
 <h1>@ViewData["Title"]</h1>
 
 <form method="post">
+    <input type="hidden" asp-for="Input.Id" />
+    
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="mb-3">
@@ -36,10 +38,8 @@
             <div class="card mb-4 question-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Question @(i + 1)</h5>
-                    @if (i > 0)
-                    {
-                        <button type="button" class="btn btn-sm btn-danger remove-question">Remove</button>
-                    }
+                    <input type="hidden" asp-for="Input.Questions[i].Id" />
+                    <button type="button" class="btn btn-sm btn-danger remove-question">Remove</button>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -54,9 +54,13 @@
                             <div class="mb-3 option-group">
                                 <div class="input-group">
                                     <div class="input-group-text">
-                                        <input type="radio" name="Input.Questions[@i].CorrectOptionIndex" value="@j" 
-                                               class="form-check-input mt-0" @(j == 0 ? "checked" : "") />
+                                        <input type="radio" 
+                                               name="Input.Questions[@i].CorrectOptionIndex" 
+                                               value="@j" 
+                                               class="form-check-input mt-0" 
+                                               checked="@Model.Input.Questions[i].Options[j].IsCorrect" />
                                     </div>
+                                    <input type="hidden" asp-for="Input.Questions[i].Options[j].Id" />
                                     <input asp-for="Input.Questions[i].Options[j].Text" class="form-control" placeholder="Option @(j + 1)" />
                                     @if (j > 1)
                                     {
@@ -77,7 +81,7 @@
     <button type="button" id="add-question" class="btn btn-secondary mb-4">Add Question</button>
 
     <div>
-        <button type="submit" class="btn btn-primary">Create Quiz</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
         <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
     </div>
 </form>
@@ -94,6 +98,7 @@
                     <div class="card mb-4 question-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5>Question ${questionIndex + 1}</h5>
+                            <input type="hidden" name="Input.Questions[${questionIndex}].Id" value="0" />
                             <button type="button" class="btn btn-sm btn-danger remove-question">Remove</button>
                         </div>
                         <div class="card-body">
@@ -109,6 +114,7 @@
                                         <div class="input-group-text">
                                             <input type="radio" name="Input.Questions[${questionIndex}].CorrectOptionIndex" value="0" class="form-check-input mt-0" checked />
                                         </div>
+                                        <input type="hidden" name="Input.Questions[${questionIndex}].Options[0].Id" value="0" />
                                         <input name="Input.Questions[${questionIndex}].Options[0].Text" class="form-control" placeholder="Option 1" />
                                     </div>
                                     <span class="text-danger" data-valmsg-for="Input.Questions[${questionIndex}].Options[0].Text"></span>
@@ -118,6 +124,7 @@
                                         <div class="input-group-text">
                                             <input type="radio" name="Input.Questions[${questionIndex}].CorrectOptionIndex" value="1" class="form-check-input mt-0" />
                                         </div>
+                                        <input type="hidden" name="Input.Questions[${questionIndex}].Options[1].Id" value="0" />
                                         <input name="Input.Questions[${questionIndex}].Options[1].Text" class="form-control" placeholder="Option 2" />
                                     </div>
                                     <span class="text-danger" data-valmsg-for="Input.Questions[${questionIndex}].Options[1].Text"></span>
@@ -163,6 +170,7 @@
                             <div class="input-group-text">
                                 <input type="radio" name="Input.Questions[${questionIndex}].CorrectOptionIndex" value="${optionCount}" class="form-check-input mt-0" />
                             </div>
+                            <input type="hidden" name="Input.Questions[${questionIndex}].Options[${optionCount}].Id" value="0" />
                             <input name="Input.Questions[${questionIndex}].Options[${optionCount}].Text" class="form-control" placeholder="Option ${optionCount + 1}" />
                             <button type="button" class="btn btn-outline-danger remove-option">X</button>
                         </div>

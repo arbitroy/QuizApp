@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using QuizApp.Data;
 using QuizApp.Models;
-using QuizApp.Pages.Quizzes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -12,8 +11,15 @@ using System.Threading.Tasks;
 namespace QuizApp.Pages.Admin.Quizzes
 {
     [Authorize(Policy = "RequireAdministratorRole")]
-    public class CreateModel(ApplicationDbContext context) : PageModel
+    public class CreateModel : PageModel
     {
+        private readonly ApplicationDbContext _context;
+
+        public CreateModel(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
         [BindProperty]
         public InputModel Input { get; set; } = new InputModel();
 
@@ -67,7 +73,8 @@ namespace QuizApp.Pages.Admin.Quizzes
                         {
                             new OptionInput { Text = string.Empty },
                             new OptionInput { Text = string.Empty }
-                        }
+                        },
+                        CorrectOptionIndex = 0 // Default the first option as correct
                     }
                 }
             };
@@ -111,8 +118,8 @@ namespace QuizApp.Pages.Admin.Quizzes
                 quiz.Questions.Add(question);
             }
 
-            context.Quizzes?.Add(quiz);
-            await context.SaveChangesAsync();
+            _context.Quizzes.Add(quiz);
+            await _context.SaveChangesAsync();
 
             return RedirectToPage("./Index");
         }

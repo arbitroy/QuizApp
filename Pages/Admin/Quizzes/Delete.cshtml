@@ -1,0 +1,42 @@
+@page "{id:int}"
+@model QuizApp.Pages.Admin.Quizzes.DeleteModel
+@{
+    ViewData["Title"] = "Delete Quiz";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="alert alert-danger">
+    <h4>Are you sure you want to delete this quiz?</h4>
+    <p>This action cannot be undone.</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Quiz Details</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Title</dt>
+            <dd class="col-sm-9">@Model.Quiz.Title</dd>
+
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@Model.Quiz.Description</dd>
+
+            <dt class="col-sm-3">Time Limit</dt>
+            <dd class="col-sm-9">@Model.Quiz.TimeLimit minutes</dd>
+
+            <dt class="col-sm-3">Number of Questions</dt>
+            <dd class="col-sm-9">@Model.Quiz.Questions.Count</dd>
+
+            <dt class="col-sm-3">Created</dt>
+            <dd class="col-sm-9">@Model.Quiz.CreatedAt.ToString("g")</dd>
+        </dl>
+    </div>
+</div>
+
+<form method="post">
+    <input type="hidden" asp-for="Quiz.Id" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
+</form>
