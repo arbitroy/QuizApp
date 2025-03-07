@@ -1,0 +1,124 @@
+@page "{id}"
+@model QuizApp.Pages.Admin.Users.DetailsModel
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Username</dt>
+                        <dd class="col-sm-8">@Model.UserDetails.UserName</dd>
+                        
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">@Model.UserDetails.Email</dd>
+                        
+                        <dt class="col-sm-4">User ID</dt>
+                        <dd class="col-sm-8"><code>@Model.UserDetails.Id</code></dd>
+                        
+                        <dt class="col-sm-4">Email Confirmed</dt>
+                        <dd class="col-sm-8">@(Model.UserDetails.EmailConfirmed ? "Yes" : "No")</dd>
+                        
+                        <dt class="col-sm-4">Last Login</dt>
+                        <dd class="col-sm-8">@Model.UserDetails.LastLoginTime.ToString("f")</dd>
+                        
+                        <dt class="col-sm-4">Roles</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.UserRoles.Any())
+                            {
+                                @foreach (var role in Model.UserRoles)
+                                {
+                                    <span class="badge bg-primary me-1">@role</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">No roles assigned</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quiz Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-7">Total Quizzes Taken</dt>
+                        <dd class="col-sm-5">@Model.QuizzesTaken</dd>
+                        
+                        <dt class="col-sm-7">Average Score</dt>
+                        <dd class="col-sm-5">@Model.AverageScore.ToString("F1")%</dd>
+                        
+                        <dt class="col-sm-7">Last Quiz Attempt</dt>
+                        <dd class="col-sm-5">
+                            @if (Model.LastQuizAttempt != null)
+                            {
+                                @Model.LastQuizAttempt.Value.ToString("g")
+                            }
+                            else
+                            {
+                                <span class="text-muted">Never</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <h3>Recent Quiz Attempts</h3>
+    @if (Model.RecentAttempts != null && Model.RecentAttempts.Any())
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Quiz</th>
+                    <th>Date</th>
+                    <th>Score</th>
+                    <th>Time Spent</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var attempt in Model.RecentAttempts)
+                {
+                    var timeSpent = attempt.EndTime.HasValue 
+                        ? (int)(attempt.EndTime.Value - attempt.StartTime).TotalMinutes 
+                        : 0;
+                        
+                    <tr>
+                        <td>@attempt.Quiz.Title</td>
+                        <td>@attempt.EndTime?.ToString("g")</td>
+                        <td>@attempt.Score%</td>
+                        <td>@timeSpent minutes</td>
+                        <td>
+                            <a asp-page="/Quizzes/Result" asp-route-id="@attempt.Id" class="btn btn-sm btn-info">View Results</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">This user hasn't taken any quizzes yet.</div>
+    }
+    
+    <div>
+        <a asp-page="./Edit" asp-route-id="@Model.UserDetails.Id" class="btn btn-primary">Edit</a>
+        <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

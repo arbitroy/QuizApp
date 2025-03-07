@@ -17,10 +17,13 @@
 
 <div class="mb-3">
     <a asp-page="Create" class="btn btn-primary">Create New User</a>
-    <button type="button" class="btn btn-danger" id="bulkDeleteBtn" disabled>Bulk Delete</button>
 </div>
 
 <form method="post" id="usersForm">
+    <div class="mb-3">
+        <button type="submit" class="btn btn-danger" id="bulkDeleteBtn" asp-page-handler="BulkDelete" disabled>Bulk Delete</button>
+    </div>
+    
     <table class="table">
         <thead>
             <tr>
@@ -86,11 +89,7 @@
 
             // Bulk delete button
             $("#bulkDeleteBtn").click(function() {
-                if (confirm(`Are you sure you want to delete ${$(".user-checkbox:checked").length} users?`)) {
-                    // In a real implementation, you would submit the form with the selected user IDs
-                    // For now, we'll just show an alert
-                    alert('Bulk delete would happen here. Implement the server-side handler.');
-                }
+                return confirm(`Are you sure you want to delete ${$(".user-checkbox:checked").length} users?`);
             });
         });
     </script>
