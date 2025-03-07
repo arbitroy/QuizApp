@@ -13,7 +13,7 @@ namespace QuizApp.Pages.Admin.Quizzes
     [Authorize(Policy = "RequireAdministratorRole")]
     public class IndexModel(ApplicationDbContext context) : PageModel
     {
-        public IList<Quiz>? Quizzes { get; set; }
+        public IList<Quiz> Quizzes { get; set; } = new List<Quiz>();
 
         public async Task OnGetAsync()
         {

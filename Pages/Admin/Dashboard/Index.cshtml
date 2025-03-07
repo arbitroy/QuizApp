@@ -5,7 +5,7 @@
 }
 
 <div class="alert alert-info">
-    <h4>Welcome, @User.Identity.Name!</h4>
+    <h4>Welcome, @(User.Identity?.Name ?? "User")!</h4>
     <p>You are logged in as a user. Here's your quiz performance dashboard.</p>
 </div>
 

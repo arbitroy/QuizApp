@@ -10,7 +10,7 @@ namespace QuizApp.Models
         
         [Required]
         [StringLength(100)]
-        public string? Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         
         public string? Description { get; set; }
         
@@ -19,8 +19,9 @@ namespace QuizApp.Models
         
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         
-        public virtual ICollection<Question>? Questions { get; set; }
-        public virtual ICollection<QuizAttempt>? Attempts { get; set; }
+        // Initialize collections to empty lists to avoid null reference warnings
+        public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
+        public virtual ICollection<QuizAttempt> Attempts { get; set; } = new List<QuizAttempt>();
     }
 
     public class Question
@@ -28,12 +29,12 @@ namespace QuizApp.Models
         public int Id { get; set; }
         
         [Required]
-        public string? Text { get; set; }
+        public string Text { get; set; } = string.Empty;
         
         public int QuizId { get; set; }
-        public virtual Quiz? Quiz { get; set; }
+        public virtual Quiz Quiz { get; set; } = null!;
         
-        public virtual ICollection<Option>? Options { get; set; }
+        public virtual ICollection<Option> Options { get; set; } = new List<Option>();
     }
 
     public class Option
@@ -41,12 +42,12 @@ namespace QuizApp.Models
         public int Id { get; set; }
         
         [Required]
-        public string? Text { get; set; }
+        public string Text { get; set; } = string.Empty;
         
         public bool IsCorrect { get; set; }
         
         public int QuestionId { get; set; }
-        public virtual Question? Question { get; set; }
+        public virtual Question Question { get; set; } = null!;
     }
 
     public class QuizAttempt
@@ -57,14 +58,14 @@ namespace QuizApp.Models
         public virtual ApplicationUser? User { get; set; }
         
         public int QuizId { get; set; }
-        public virtual Quiz? Quiz { get; set; }
+        public virtual Quiz Quiz { get; set; } = null!;
         
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
         
         public int Score { get; set; }
         
-        public virtual ICollection<UserAnswer>? Answers { get; set; }
+        public virtual ICollection<UserAnswer> Answers { get; set; } = new List<UserAnswer>();
     }
 
     public class UserAnswer
@@ -72,12 +73,12 @@ namespace QuizApp.Models
         public int Id { get; set; }
         
         public int QuizAttemptId { get; set; }
-        public virtual QuizAttempt? QuizAttempt { get; set; }
+        public virtual QuizAttempt QuizAttempt { get; set; } = null!;
         
         public int QuestionId { get; set; }
-        public virtual Question? Question { get; set; }
+        public virtual Question Question { get; set; } = null!;
         
         public int SelectedOptionId { get; set; }
-        public virtual Option? SelectedOption { get; set; }
+        public virtual Option SelectedOption { get; set; } = null!;
     }
 }

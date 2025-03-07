@@ -15,19 +15,21 @@ namespace QuizApp.Pages.Dashboard
     [Authorize]
     public class IndexModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager) : PageModel
     {
-        public ApplicationUser? CurrentUser { get; set; }
-        public IList<QuizAttempt>? RecentAttempts { get; set; }
+        public ApplicationUser CurrentUser { get; set; } = null!;
+        public IList<QuizAttempt> RecentAttempts { get; set; } = new List<QuizAttempt>();
         public int TotalQuizzesTaken { get; set; }
         public double AverageScore { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
         {
-            CurrentUser = await userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
-            if (CurrentUser == null)
+            if (user == null)
             {
                 return NotFound();
             }
+
+            CurrentUser = user;
 
             // Get the 5 most recent quiz attempts
             RecentAttempts = await context.QuizAttempts

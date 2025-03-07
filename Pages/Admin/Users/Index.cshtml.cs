@@ -13,7 +13,7 @@ namespace QuizApp.Pages.Admin.Users
     [Authorize(Policy = "RequireAdministratorRole")]
     public class IndexModel(UserManager<ApplicationUser> userManager) : PageModel
     {
-        public IList<ApplicationUser>? Users { get; set; }
+        public IList<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
 
         [TempData]
         public string? StatusMessage { get; set; }
@@ -32,7 +32,7 @@ namespace QuizApp.Pages.Admin.Users
             }
 
             // Don't allow admins to delete themselves
-            if (user.UserName == User.Identity.Name)
+            if (User.Identity != null && user.UserName == User.Identity.Name)
             {
                 StatusMessage = "Error: You cannot delete your own account.";
                 return RedirectToPage();

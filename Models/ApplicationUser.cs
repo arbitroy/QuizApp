@@ -8,6 +8,7 @@ namespace QuizApp.Models
     {
         public DateTime LastLoginTime { get; set; }
 
-        public virtual ICollection<QuizAttempt>? QuizAttempts { get; set; }
+        // Initialize the collection to avoid null reference warnings
+        public virtual ICollection<QuizAttempt> QuizAttempts { get; set; } = new List<QuizAttempt>();
     }
 }

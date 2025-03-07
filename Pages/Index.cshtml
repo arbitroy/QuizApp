@@ -18,7 +18,7 @@
     }
 </div>
 
-@if (Model.RecentQuizzes.Any())
+@if (Model.RecentQuizzes != null && Model.RecentQuizzes.Any())
 {
     <h2 class="text-center mb-4">Recent Quizzes</h2>
 

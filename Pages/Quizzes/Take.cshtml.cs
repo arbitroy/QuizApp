@@ -15,25 +15,31 @@ namespace QuizApp.Pages.Quizzes
     [Authorize]
     public class TakeModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager) : PageModel
     {
-        public Quiz? Quiz { get; set; }
-        public QuizAttempt? Attempt { get; set; }
+        public Quiz Quiz { get; set; } = null!;
+        public QuizAttempt Attempt { get; set; } = null!;
 
         [BindProperty]
         public Dictionary<int, int> Answers { get; set; } = new Dictionary<int, int>();
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
-            Quiz = await context.Quizzes
+            var quiz = await context.Quizzes
                 .Include(q => q.Questions)
                 .ThenInclude(q => q.Options)
                 .FirstOrDefaultAsync(q => q.Id == id);
 
-            if (Quiz == null)
+            if (quiz == null)
             {
                 return NotFound();
             }
 
+            Quiz = quiz;
+
             var user = await userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
 
             // Create a new attempt
             Attempt = new QuizAttempt
@@ -52,6 +58,10 @@ namespace QuizApp.Pages.Quizzes
         public async Task<IActionResult> OnPostAsync(int id)
         {
             var user = await userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
 
             var quiz = await context.Quizzes
                 .Include(q => q.Questions)
@@ -103,7 +113,7 @@ namespace QuizApp.Pages.Quizzes
 
             // Update the attempt
             attempt.EndTime = DateTime.Now;
-            attempt.Score = (int)Math.Round((double)correctAnswers / quiz.Questions.Count() * 100);
+            attempt.Score = (int)Math.Round((double)correctAnswers / quiz.Questions.Count * 100);
 
             await context.SaveChangesAsync();
 

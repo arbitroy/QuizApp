@@ -45,7 +45,7 @@ namespace QuizApp.Data
             }
 
             // Create sample quiz if none exist
-            if (!await context.Quizzes.AnyAsync())
+            if (context.Quizzes != null && !await context.Quizzes.AnyAsync())
             {
                 var quiz = new Quiz
                 {

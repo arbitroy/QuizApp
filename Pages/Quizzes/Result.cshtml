@@ -27,11 +27,11 @@
             <h5>@question.Text</h5>
         </div>
         <div class="card-body">
-            <p><strong>Your answer:</strong> @selectedOption?.Text</p>
+            <p><strong>Your answer:</strong> @(selectedOption?.Text ?? "No answer")</p>
 
             @if (!isCorrect)
             {
-                <p><strong>Correct answer:</strong> @correctOption?.Text</p>
+                <p><strong>Correct answer:</strong> @(correctOption?.Text ?? "Unknown")</p>
             }
         </div>
         <div class="card-footer text-white @(isCorrect ? "bg-success" : "bg-danger")">

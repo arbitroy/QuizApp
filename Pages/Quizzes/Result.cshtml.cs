@@ -13,26 +13,31 @@ namespace QuizApp.Pages.Quizzes
     [Authorize]
     public class ResultModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager) : PageModel
     {
-        public QuizAttempt? Attempt { get; set; }
-        public Quiz? Quiz { get; set; }
+        public QuizAttempt Attempt { get; set; } = null!;
+        public Quiz Quiz { get; set; } = null!;
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
             var user = await userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
 
-            Attempt = await context.QuizAttempts
+            var attempt = await context.QuizAttempts
                 .Include(a => a.Quiz)
                 .Include(a => a.Answers)
                 .ThenInclude(a => a.Question)
                 .ThenInclude(q => q.Options)
                 .FirstOrDefaultAsync(a => a.Id == id);
 
-            if (Attempt == null || Attempt.UserId != user.Id)
+            if (attempt == null || attempt.UserId != user.Id)
             {
                 return NotFound();
             }
 
-            Quiz = Attempt.Quiz;
+            Attempt = attempt;
+            Quiz = attempt.Quiz ?? throw new InvalidOperationException("Quiz not found for this attempt");
 
             return Page();
         }

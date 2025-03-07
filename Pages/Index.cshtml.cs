@@ -12,7 +12,7 @@ namespace QuizApp.Pages
 {
     public class IndexModel(ApplicationDbContext context) : PageModel
     {
-        public IList<Quiz>? RecentQuizzes { get; set; }
+        public IList<Quiz> RecentQuizzes { get; set; } = new List<Quiz>();
 
         public async Task OnGetAsync()
         {

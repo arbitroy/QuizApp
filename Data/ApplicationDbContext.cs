@@ -6,11 +6,12 @@ namespace QuizApp.Data
 {
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
-        public DbSet<Quiz>? Quizzes { get; set; }
-        public DbSet<Question>? Questions { get; set; }
-        public DbSet<Option>? Options { get; set; }
-        public DbSet<QuizAttempt>? QuizAttempts { get; set; }
-        public DbSet<UserAnswer>? UserAnswers { get; set; }
+        // Use null! to tell the compiler these will be initialized by EF Core
+        public DbSet<Quiz> Quizzes { get; set; } = null!;
+        public DbSet<Question> Questions { get; set; } = null!;
+        public DbSet<Option> Options { get; set; } = null!;
+        public DbSet<QuizAttempt> QuizAttempts { get; set; } = null!;
+        public DbSet<UserAnswer> UserAnswers { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

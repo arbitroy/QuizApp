@@ -28,7 +28,7 @@
                 <td>@quiz.Title</td>
                 <td>@quiz.Description</td>
                 <td>@quiz.TimeLimit minutes</td>
-                <td>@quiz.Questions.Count()</td>
+                <td>@quiz.Questions.Count</td>
                 <td>@quiz.CreatedAt.ToShortDateString()</td>
                 <td>
                     <a asp-page="./Edit" asp-route-id="@quiz.Id" class="btn btn-sm btn-info">Edit</a>
