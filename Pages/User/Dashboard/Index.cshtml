@@ -1,206 +1,338 @@
 @page
 @model QuizApp.Pages.User.Dashboard.IndexModel
 @{
-    ViewData["Title"] = "User Dashboard";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="alert alert-info">
-    <h4>Welcome, @(User.Identity?.Name ?? "User")!</h4>
-    <p>Track your progress and take quizzes to improve your knowledge.</p>
-</div>
-
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card bg-primary text-white h-100">
-            <div class="card-body">
-                <h5 class="card-title">Total Quizzes Taken</h5>
-                <p class="card-text display-4">@Model.TotalQuizzesTaken</p>
+<div class="container">
+    <div class="alert alert-primary shadow-sm mb-4 animate-on-scroll">
+        <div class="d-flex align-items-center">
+            <div class="me-3">
+                <i class="bi bi-person-circle" style="font-size: 2.5rem;"></i>
+            </div>
+            <div>
+                <h4 class="mb-1">Welcome back, @(User.Identity?.Name?.Split('@')[0] ?? "User")!</h4>
+                <p class="mb-0">Track your progress, take new quizzes, and continue your learning journey.</p>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card bg-success text-white h-100">
-            <div class="card-body">
-                <h5 class="card-title">Average Score</h5>
-                <p class="card-text display-4">@Model.AverageScore.ToString("F1")%</p>
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4 mb-md-0">
+            <div class="stat-card bg-gradient-primary animate-on-scroll">
+                <div class="stat-card-icon">
+                    <i class="bi bi-journals"></i>
+                </div>
+                <h5>Total Quizzes Taken</h5>
+                <p class="display-4">@Model.TotalQuizzesTaken</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4 mb-md-0">
+            <div class="stat-card bg-gradient-success animate-on-scroll" style="animation-delay: 100ms;">
+                <div class="stat-card-icon">
+                    <i class="bi bi-bar-chart-line"></i>
+                </div>
+                <h5>Average Score</h5>
+                <p class="display-4">@Model.AverageScore.ToString("F1")<small>%</small></p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card bg-gradient-info animate-on-scroll" style="animation-delay: 200ms;">
+                <div class="stat-card-icon">
+                    <i class="bi bi-trophy"></i>
+                </div>
+                <h5>Best Score</h5>
+                <p class="display-4">@Model.BestScore.ToString("F0")<small>%</small></p>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card bg-info text-white h-100">
-            <div class="card-body">
-                <h5 class="card-title">Best Score</h5>
-                <p class="card-text display-4">@Model.BestScore.ToString("F0")%</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mb-4">
-    <div class="col-md-8">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5>Recent Quiz Attempts</h5>
-            </div>
-            <div class="card-body">
-                @if (Model.RecentAttempts.Any())
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Quiz</th>
-                                    <th>Date</th>
-                                    <th>Score</th>
-                                    <th>Time Spent</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var attempt in Model.RecentAttempts)
-                                {
-                                    <tr>
-                                        <td>@attempt.Quiz.Title</td>
-                                        <td>@attempt.EndTime?.ToString("g")</td>
-                                        <td>
-                                            @attempt.Score%
-                                            @if (attempt.Score >= 80)
-                                            {
-                                                <span class="badge bg-success ms-1">Excellent</span>
-                                            }
-                                            else if (attempt.Score >= 60)
-                                            {
-                                                <span class="badge bg-warning ms-1">Good</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-danger ms-1">Needs Work</span>
-                                            }
-                                        </td>
-                                        <td>
-                                            @{
-                                                var duration = attempt.EndTime - attempt.StartTime;
-                                                @(duration.HasValue ? $"{duration.Value.TotalMinutes:F1} min" : "N/A")
-                                            }
-                                        </td>
-                                        <td>
-                                            <a asp-page="/Quizzes/Result" asp-route-id="@attempt.Id" class="btn btn-sm btn-info">Review</a>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                    @if (Model.TotalQuizzesTaken > Model.RecentAttempts.Count)
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4 animate-on-scroll">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Activity</h5>
+                    <a asp-page="./History" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.RecentAttempts.Any())
                     {
-                        <div class="text-center mt-3">
-                            <a asp-page="./History" class="btn btn-outline-primary">View All History</a>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Quiz</th>
+                                        <th>Date</th>
+                                        <th>Score</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var attempt in Model.RecentAttempts)
+                                    {
+                                        <tr>
+                                            <td>@attempt.Quiz.Title</td>
+                                            <td>@attempt.EndTime?.ToString("MMM dd, HH:mm")</td>
+                                            <td class="fw-bold">@attempt.Score%</td>
+                                            <td>
+                                                @if (attempt.Score >= 80)
+                                                {
+                                                    <span class="badge bg-success">Excellent</span>
+                                                }
+                                                else if (attempt.Score >= 60)
+                                                {
+                                                    <span class="badge bg-warning text-dark">Good</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Needs Work</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <a asp-page="/Quizzes/Result" asp-route-id="@attempt.Id" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> Review
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
                         </div>
                     }
-                }
-                else
-                {
-                    <div class="alert alert-light">
-                        <p>You haven't taken any quizzes yet.</p>
-                        <a asp-page="/Quizzes/Index" class="btn btn-primary">Start a Quiz Now</a>
-                    </div>
-                }
+                    else
+                    {
+                        <div class="alert alert-light m-3">
+                            <p>You haven't taken any quizzes yet.</p>
+                            <a asp-page="/Quizzes/Index" class="btn btn-primary">Start a Quiz Now</a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow animate-on-scroll">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Your Progress</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.CategoryPerformance.Any())
+                    {
+                        <div class="row">
+                            <div class="col-md-7">
+                                <canvas id="categoryChart" height="250"></canvas>
+                            </div>
+                            <div class="col-md-5">
+                                <h6 class="mb-3">Category Performance</h6>
+                                <div class="list-group">
+                                    @foreach (var categoryStats in Model.CategoryPerformance.Take(4))
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span>@(string.IsNullOrEmpty(categoryStats.Category) ? "General" : categoryStats.Category)</span>
+                                                <div class="progress mt-1" style="height: 5px; width: 100px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                                        style="width: @(categoryStats.AverageScore)%"></div>
+                                                </div>
+                                            </div>
+                                            <span class="badge bg-primary rounded-pill">@categoryStats.AverageScore.ToString("F1")%</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p>Take more quizzes to see your performance by category.</p>
+                    }
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5>Recommended Quizzes</h5>
+        <div class="col-lg-4">
+            <div class="card shadow mb-4 animate-on-scroll">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Recommended Quizzes</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.RecommendedQuizzes.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var quiz in Model.RecommendedQuizzes)
+                            {
+                                <a href="/Quizzes/Take/@quiz.Id" class="list-group-item list-group-item-action p-3">
+                                    <div class="d-flex w-100 justify-content-between mb-1">
+                                        <h6 class="mb-1">@quiz.Title</h6>
+                                        <small class="text-muted">@quiz.TimeLimit min</small>
+                                    </div>
+                                    <p class="mb-1 text-truncate">@quiz.Description</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <small class="text-muted">@quiz.Questions.Count questions</small>
+                                        <span class="badge bg-primary rounded-pill">Take Quiz</span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-3">
+                            <p>No quiz recommendations available.</p>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <a asp-page="/Quizzes/Index" class="btn btn-primary w-100">
+                        <i class="bi bi-grid"></i> Browse All Quizzes
+                    </a>
+                </div>
             </div>
-            <div class="card-body">
-                @if (Model.RecommendedQuizzes.Any())
-                {
-                    <div class="list-group">
-                        @foreach (var quiz in Model.RecommendedQuizzes)
+
+            <div class="card shadow mb-4 animate-on-scroll">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-page="/Quizzes/Index" class="btn btn-primary">
+                            <i class="bi bi-play-fill me-2"></i> Take a New Quiz
+                        </a>
+                        <a asp-area="Identity" asp-page="/Account/Manage/Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-person-gear me-2"></i> Manage Account
+                        </a>
+                        @if (Model.LastAttempt != null)
                         {
-                            <a href="/Quizzes/Take/@quiz.Id" class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">@quiz.Title</h6>
-                                    <small>@quiz.TimeLimit min</small>
-                                </div>
-                                <p class="mb-1 text-truncate">@quiz.Description</p>
-                                <small>@quiz.Questions.Count questions</small>
+                            <a asp-page="/Quizzes/Result" asp-route-id="@Model.LastAttempt.Id" class="btn btn-outline-info">
+                                <i class="bi bi-eye me-2"></i> View Last Quiz Result
                             </a>
                         }
                     </div>
-                }
-                else
-                {
-                    <p>No quiz recommendations available.</p>
-                }
+                </div>
             </div>
-            <div class="card-footer">
-                <a asp-page="/Quizzes/Index" class="btn btn-primary w-100">Browse All Quizzes</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Your Progress</h5>
-            </div>
-            <div class="card-body">
-                @if (Model.CategoryPerformance.Any())
-                {
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Quizzes Taken</th>
-                                    <th>Average Score</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var categoryStats in Model.CategoryPerformance)
-                                {
-                                    <tr>
-                                        <td>@(string.IsNullOrEmpty(categoryStats.Category) ? "General" : categoryStats.Category)</td>
-                                        <td>@categoryStats.Count</td>
-                                        <td>@categoryStats.AverageScore.ToString("F1")%</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+            
+            <div class="card shadow animate-on-scroll">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-stars me-2"></i>Achievements</h5>
+                    <span class="badge bg-primary rounded-pill">
+                        @(Model.TotalQuizzesTaken > 0 ? Math.Min(5, (int)Math.Ceiling(Model.TotalQuizzesTaken / 2.0)) : 0)/5
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-4 text-center">
+                            <div class="p-2 rounded @(Model.TotalQuizzesTaken >= 1 ? "bg-success text-white" : "bg-light")">
+                                <i class="bi bi-1-circle@(Model.TotalQuizzesTaken >= 1 ? "-fill" : "")" style="font-size: 2rem;"></i>
+                                <div class="mt-1 small">First Quiz</div>
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="p-2 rounded @(Model.TotalQuizzesTaken >= 3 ? "bg-success text-white" : "bg-light")">
+                                <i class="bi bi-3-circle@(Model.TotalQuizzesTaken >= 3 ? "-fill" : "")" style="font-size: 2rem;"></i>
+                                <div class="mt-1 small">3 Quizzes</div>
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="p-2 rounded @(Model.TotalQuizzesTaken >= 5 ? "bg-success text-white" : "bg-light")">
+                                <i class="bi bi-5-circle@(Model.TotalQuizzesTaken >= 5 ? "-fill" : "")" style="font-size: 2rem;"></i>
+                                <div class="mt-1 small">5 Quizzes</div>
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="p-2 rounded @(Model.AverageScore >= 75 ? "bg-success text-white" : "bg-light")">
+                                <i class="bi bi-award@(Model.AverageScore >= 75 ? "-fill" : "")" style="font-size: 2rem;"></i>
+                                <div class="mt-1 small">75% Avg</div>
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="p-2 rounded @(Model.BestScore >= 90 ? "bg-success text-white" : "bg-light")">
+                                <i class="bi bi-trophy@(Model.BestScore >= 90 ? "-fill" : "")" style="font-size: 2rem;"></i>
+                                <div class="mt-1 small">90% Score</div>
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="p-2 rounded @(Model.TotalQuizzesTaken >= 10 ? "bg-success text-white" : "bg-light")">
+                                <i class="bi bi-gem@(Model.TotalQuizzesTaken >= 10 ? "-fill" : "")" style="font-size: 2rem;"></i>
+                                <div class="mt-1 small">10 Quizzes</div>
+                            </div>
+                        </div>
                     </div>
-                }
-                else
-                {
-                    <p>Take more quizzes to see your performance by category.</p>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Quick Actions</h5>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a asp-page="/Quizzes/Index" class="btn btn-primary">Take a New Quiz</a>
-                    <a asp-area="Identity" asp-page="/Account/Manage/Index" class="btn btn-outline-secondary">Manage Account</a>
-                    @if (Model.LastAttempt != null)
-                    {
-                        <a asp-page="/Quizzes/Result" asp-route-id="@Model.LastAttempt.Id" class="btn btn-outline-info">
-                            View Last Quiz Result
-                        </a>
-                    }
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Category performance chart
+            @if (Model.CategoryPerformance.Any())
+            {
+                <text>
+                const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+                
+                const categoryData = {
+                    labels: [@Html.Raw(string.Join(",", Model.CategoryPerformance.Select(c => $"'{(string.IsNullOrEmpty(c.Category) ? "General" : c.Category)}'").Take(6)))],
+                    datasets: [{
+                        label: 'Average Score (%)',
+                        data: [@Html.Raw(string.Join(",", Model.CategoryPerformance.Select(c => c.AverageScore.ToString("F1")).Take(6)))],
+                        backgroundColor: [
+                            'rgba(67, 97, 238, 0.7)',
+                            'rgba(76, 201, 240, 0.7)',
+                            'rgba(58, 177, 155, 0.7)',
+                            'rgba(247, 37, 133, 0.7)',
+                            'rgba(255, 152, 0, 0.7)',
+                            'rgba(76, 175, 80, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(76, 201, 240, 1)',
+                            'rgba(58, 177, 155, 1)',
+                            'rgba(247, 37, 133, 1)',
+                            'rgba(255, 152, 0, 1)',
+                            'rgba(76, 175, 80, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+                
+                const categoryChart = new Chart(categoryCtx, {
+                    type: 'bar',
+                    data: categoryData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                </text>
+            }
+            
+            // Add animation to stat cards
+            $('.animate-on-scroll').each(function(index) {
+                const card = $(this);
+                setTimeout(() => {
+                    card.addClass('animate-fade-in');
+                }, 100 * index);
+            });
+        });
+    </script>
+}

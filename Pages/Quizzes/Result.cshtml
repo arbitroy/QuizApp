@@ -4,38 +4,345 @@
     ViewData["Title"] = "Quiz Results";
 }
 
-<h1>Results for @Model.Quiz.Title</h1>
-
-<div class="alert alert-primary mb-4">
-    <h4>Your score: @Model.Attempt.Score%</h4>
-    <p>Completed on: @Model.Attempt.EndTime?.ToString("f")</p>
-</div>
-
-<a asp-page="./Index" class="btn btn-primary mb-4">Back to Quizzes</a>
-
-<h3>Question Summary</h3>
-
-@foreach (var answer in Model.Attempt.Answers)
-{
-    var question = answer.Question;
-    var selectedOption = question.Options.FirstOrDefault(o => o.Id == answer.SelectedOptionId);
-    var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
-    var isCorrect = selectedOption?.IsCorrect == true;
-
-    <div class="card mb-3 @(isCorrect ? "border-success" : "border-danger")">
-        <div class="card-header">
-            <h5>@question.Text</h5>
-        </div>
-        <div class="card-body">
-            <p><strong>Your answer:</strong> @(selectedOption?.Text ?? "No answer")</p>
-
-            @if (!isCorrect)
-            {
-                <p><strong>Correct answer:</strong> @(correctOption?.Text ?? "Unknown")</p>
-            }
-        </div>
-        <div class="card-footer text-white @(isCorrect ? "bg-success" : "bg-danger")">
-            @(isCorrect ? "Correct" : "Incorrect")
+<div class="container">
+    <div class="result-summary mb-4 animate-on-scroll shadow">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-6 mb-3">Results for @Model.Quiz.Title</h1>
+                <h4 class="quiz-score" data-score="@Model.Attempt.Score">
+                    Your Score: <span class="fw-bold">@Model.Attempt.Score%</span>
+                </h4>
+                <p class="mb-0"><i class="bi bi-calendar3"></i> Completed on: @Model.Attempt.EndTime?.ToString("f")</p>
+                @{
+                    var duration = Model.Attempt.EndTime - Model.Attempt.StartTime;
+                    var minutes = duration.HasValue ? Math.Floor(duration.Value.TotalMinutes) : 0;
+                    var seconds = duration.HasValue ? Math.Floor(duration.Value.TotalSeconds % 60) : 0;
+                }
+                <p><i class="bi bi-stopwatch"></i> Time taken: @minutes min @seconds sec</p>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    @if (Model.Attempt.Score >= 90)
+                    {
+                        <div class="display-1 mb-2"><i class="bi bi-trophy-fill text-warning"></i></div>
+                        <div class="h4">Excellent!</div>
+                        <p>Outstanding performance!</p>
+                    }
+                    else if (Model.Attempt.Score >= 70)
+                    {
+                        <div class="display-1 mb-2"><i class="bi bi-award-fill text-info"></i></div>
+                        <div class="h4">Great Job!</div>
+                        <p>Very good performance!</p>
+                    }
+                    else if (Model.Attempt.Score >= 50)
+                    {
+                        <div class="display-1 mb-2"><i class="bi bi-hand-thumbs-up-fill text-primary"></i></div>
+                        <div class="h4">Good Effort!</div>
+                        <p>You're on the right track!</p>
+                    }
+                    else
+                    {
+                        <div class="display-1 mb-2"><i class="bi bi-book-fill text-secondary"></i></div>
+                        <div class="h4">Keep Learning!</div>
+                        <p>Try again to improve your score!</p>
+                    }
+                </div>
+            </div>
         </div>
     </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart-fill me-2"></i>Performance Summary</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="resultsChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-gradient-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning-charge-fill me-2"></i>Action Items</h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var correctAnswers = Model.Attempt.Answers.Count(a => a.SelectedOption.IsCorrect);
+                        var totalQuestions = Model.Attempt.Answers.Count;
+                        var scoreMessage = "";
+                        
+                        if (Model.Attempt.Score >= 90) 
+                        {
+                            scoreMessage = "Congratulations on your excellent score! You've mastered this quiz.";
+                        }
+                        else if (Model.Attempt.Score >= 70)
+                        {
+                            scoreMessage = "Great job! You've demonstrated good knowledge in this area.";
+                        }
+                        else if (Model.Attempt.Score >= 50)
+                        {
+                            scoreMessage = "Good effort! Review the questions you missed to improve your score.";
+                        }
+                        else
+                        {
+                            scoreMessage = "Keep studying this topic to improve your understanding and score.";
+                        }
+                    }
+                    
+                    <p class="lead">@scoreMessage</p>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="progress flex-grow-1 me-3" style="height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: @(Model.Attempt.Score)%"></div>
+                        </div>
+                        <span class="fw-bold">@correctAnswers / @totalQuestions</span>
+                    </div>
+                    
+                    <div class="list-group mt-4">
+                        <a href="#question-summary" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-card-list me-2"></i>Review all questions</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </a>
+                        <a href="/Quizzes/Take/@Model.Quiz.Id" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-arrow-repeat me-2"></i>Retake this quiz</span>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a href="/Quizzes/Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-grid me-2"></i>Try a different quiz</span>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 id="question-summary" class="mb-4"><i class="bi bi-card-list me-2"></i>Question Summary</h3>
+
+    <div class="question-summary-container">
+        @foreach (var (answer, index) in Model.Attempt.Answers.Select((a, i) => (a, i)))
+        {
+            var question = answer.Question;
+            var selectedOption = question.Options.FirstOrDefault(o => o.Id == answer.SelectedOptionId);
+            var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
+            var isCorrect = selectedOption?.IsCorrect == true;
+
+            <div class="card mb-4 result-card @(isCorrect ? "correct" : "incorrect") animate-on-scroll" style="animation-delay: @(index * 100)ms">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Question @(index + 1)</h5>
+                    <span class="badge rounded-pill bg-@(isCorrect ? "success" : "danger")">
+                        @(isCorrect ? "Correct" : "Incorrect")
+                    </span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-4">@question.Text</h5>
+                    
+                    <div class="options-container">
+                        @foreach (var option in question.Options)
+                        {
+                            var isSelected = option.Id == answer.SelectedOptionId;
+                            var optionClass = "";
+                            
+                            if (option.IsCorrect)
+                            {
+                                optionClass = "bg-success text-white";
+                            }
+                            else if (isSelected)
+                            {
+                                optionClass = "bg-danger text-white";
+                            }
+                            
+                            <div class="mb-3 p-3 rounded @optionClass">
+                                <div class="d-flex align-items-center">
+                                    @if (isSelected && !option.IsCorrect)
+                                    {
+                                        <i class="bi bi-x-circle-fill text-white me-2"></i>
+                                    }
+                                    else if (option.IsCorrect)
+                                    {
+                                        <i class="bi bi-check-circle-fill text-white me-2"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-circle me-2"></i>
+                                    }
+                                    <span>@option.Text</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    @if (!isCorrect)
+                    {
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            <strong>Explanation:</strong> The correct answer is "@(correctOption?.Text ?? "Unknown")".
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="text-center mt-5 mb-5">
+        <a asp-page="/Quizzes/Index" class="btn btn-primary me-2">
+            <i class="bi bi-grid"></i> Browse More Quizzes
+        </a>
+        <a asp-page="/Quizzes/Take" asp-route-id="@Model.Quiz.Id" class="btn btn-success">
+            <i class="bi bi-arrow-repeat"></i> Retake This Quiz
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Create the results chart
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            
+            // Prepare data
+            const correctAnswers = @Model.Attempt.Answers.Count(a => a.SelectedOption.IsCorrect);
+            const incorrectAnswers = @Model.Attempt.Answers.Count(a => !a.SelectedOption.IsCorrect);
+            
+            const resultsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Correct', 'Incorrect'],
+                    datasets: [{
+                        data: [correctAnswers, incorrectAnswers],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 99, 132, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+            
+            // Add animations to result cards
+            $('.result-card').each(function(index) {
+                setTimeout(() => {
+                    $(this).addClass('animate-fade-in');
+                }, 100 * index);
+            });
+            
+            // Add confetti effect for high scores
+            const score = @Model.Attempt.Score;
+            
+            if (score >= 80) {
+                // Simple confetti effect
+                for (let i = 0; i < 100; i++) {
+                    createConfetti(i * 50);
+                }
+                
+                // Celebration message
+                if (score >= 90) {
+                    showToast('Outstanding! You got an excellent score! 🏆', 'success');
+                } else {
+                    showToast('Great job! That\'s a good score! 🎉', 'success');
+                }
+            }
+            
+            function createConfetti(delay) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    
+                    // Random position
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    
+                    // Random color
+                    const colors = ['#f72585', '#4361ee', '#4cc9f0', '#4CAF50', '#FF9800'];
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    // Random size
+                    const size = Math.random() * 10 + 5;
+                    confetti.style.width = size + 'px';
+                    confetti.style.height = size + 'px';
+                    
+                    // Random rotation
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    
+                    document.body.appendChild(confetti);
+                    
+                    // Remove after animation completes
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }, delay);
+            }
+            
+            // Show toast notification function
+            function showToast(message, type = 'success') {
+                // Create toast container if it doesn't exist
+                let toastContainer = document.querySelector('.toast-container');
+                if (!toastContainer) {
+                    toastContainer = document.createElement('div');
+                    toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                    document.body.appendChild(toastContainer);
+                }
+                
+                // Create toast element
+                const toastEl = document.createElement('div');
+                toastEl.className = `toast bg-${type} text-white`;
+                toastEl.setAttribute('role', 'alert');
+                toastEl.setAttribute('aria-live', 'assertive');
+                toastEl.setAttribute('aria-atomic', 'true');
+                
+                // Create toast content
+                toastEl.innerHTML = `
+                    <div class="toast-header bg-${type} text-white">
+                        <strong class="me-auto">QuizApp</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                `;
+                
+                // Add to container
+                toastContainer.appendChild(toastEl);
+                
+                // Initialize and show the toast
+                const toast = new bootstrap.Toast(toastEl, { 
+                    autohide: true,
+                    delay: 3000
+                });
+                toast.show();
+                
+                // Remove toast after it's hidden
+                toastEl.addEventListener('hidden.bs.toast', function() {
+                    toastEl.remove();
+                });
+            }
+        });
+    </script>
 }

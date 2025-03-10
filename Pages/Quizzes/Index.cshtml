@@ -4,31 +4,257 @@
     ViewData["Title"] = "Available Quizzes";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">@ViewData["Title"]</h1>
+        <div class="d-flex">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="quizFilter" class="form-control border-start-0" placeholder="Search quizzes...">
+            </div>
+        </div>
+    </div>
 
-<div class="row">
-    @if (Model.Quizzes != null)
-    {
-        foreach (var quiz in Model.Quizzes)
-        {
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">@quiz.Title</h5>
-                        <p class="card-text">@quiz.Description</p>
-                        <p class="card-text"><small class="text-muted">Time Limit: @quiz.TimeLimit minutes</small></p>
-                        <a asp-page="./Take" asp-route-id="@quiz.Id" class="btn btn-primary">Take Quiz</a>
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="card-title mb-0">Categories</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group category-filter">
+                        <a href="#" class="list-group-item list-group-item-action active" data-category="all">All Categories</a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="science">Science</a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="history">History</a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="geography">Geography</a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="literature">Literature</a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="math">Mathematics</a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="general">General Knowledge</a>
                     </div>
                 </div>
             </div>
-        }
-    }
-    else
-    {
-        <div class="col-12">
-            <div class="alert alert-info">
-                No quizzes are currently available.
+            
+            <div class="card mt-4">
+                <div class="card-header bg-gradient-info text-white">
+                    <h5 class="card-title mb-0">Difficulty Level</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" value="" id="difficultyEasy" checked>
+                        <label class="form-check-label" for="difficultyEasy">
+                            <span class="badge bg-success me-2">Easy</span> Beginner friendly
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" value="" id="difficultyMedium" checked>
+                        <label class="form-check-label" for="difficultyMedium">
+                            <span class="badge bg-warning me-2">Medium</span> Moderate challenge
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="difficultyHard" checked>
+                        <label class="form-check-label" for="difficultyHard">
+                            <span class="badge bg-danger me-2">Hard</span> Advanced level
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
-    }
+        
+        <div class="col-md-9">
+            <div class="row" id="quizContainer">
+                @if (Model.Quizzes != null)
+                {
+                    foreach (var quiz in Model.Quizzes)
+                    {
+                        <div class="col-md-6 mb-4 animate-on-scroll quiz-card-container" 
+                             data-category="@(GetCategoryFromTitle(quiz.Title))" 
+                             data-difficulty="@(GetDifficultyFromQuestions(quiz.Questions.Count))">
+                            <div class="card quiz-card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <h5 class="card-title">@quiz.Title</h5>
+                                        <span class="badge rounded-pill bg-primary">@quiz.Questions.Count Q</span>
+                                    </div>
+                                    <p class="card-text">@quiz.Description</p>
+                                    <div class="d-flex justify-content-between mt-4">
+                                        <div>
+                                            <i class="bi bi-clock me-1"></i> @quiz.TimeLimit min
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-@(GetDifficultyClass(quiz.Questions.Count))">
+                                                @GetDifficultyFromQuestions(quiz.Questions.Count)
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <a asp-page="./Take" asp-route-id="@quiz.Id" class="btn btn-primary w-100">
+                                        <i class="bi bi-play-fill"></i> Take Quiz
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill me-2"></i> No quizzes are currently available.
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
+
+@functions {
+    public string GetCategoryFromTitle(string title)
+    {
+        if (title.Contains("Science", StringComparison.OrdinalIgnoreCase))
+            return "science";
+        else if (title.Contains("History", StringComparison.OrdinalIgnoreCase))
+            return "history";
+        else if (title.Contains("Geography", StringComparison.OrdinalIgnoreCase))
+            return "geography";
+        else if (title.Contains("Literature", StringComparison.OrdinalIgnoreCase) || 
+                 title.Contains("English", StringComparison.OrdinalIgnoreCase))
+            return "literature";
+        else if (title.Contains("Math", StringComparison.OrdinalIgnoreCase))
+            return "math";
+        
+        return "general"; // Default category
+    }
+    
+    public string GetDifficultyFromQuestions(int questionCount)
+    {
+        if (questionCount <= 5)
+            return "Easy";
+        else if (questionCount <= 10)
+            return "Medium";
+        else
+            return "Hard";
+    }
+    
+    public string GetDifficultyClass(int questionCount)
+    {
+        if (questionCount <= 5)
+            return "success";
+        else if (questionCount <= 10)
+            return "warning";
+        else
+            return "danger";
+    }
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Category filter
+            $('.category-filter a').click(function(e) {
+                e.preventDefault();
+                
+                // Update active state
+                $('.category-filter a').removeClass('active');
+                $(this).addClass('active');
+                
+                // Get selected category
+                const category = $(this).data('category');
+                
+                // Filter quiz cards
+                if (category === 'all') {
+                    $('.quiz-card-container').show();
+                } else {
+                    $('.quiz-card-container').hide();
+                    $(`.quiz-card-container[data-category="${category}"]`).show();
+                }
+                
+                // Show message if no quizzes in category
+                if ($('.quiz-card-container:visible').length === 0) {
+                    $('#quizContainer').append('<div class="col-12 no-quizzes-message"><div class="alert alert-info">No quizzes available in this category.</div></div>');
+                } else {
+                    $('.no-quizzes-message').remove();
+                }
+            });
+            
+            // Difficulty filter
+            $('input[id^="difficulty"]').change(function() {
+                filterQuizzes();
+            });
+            
+            function filterQuizzes() {
+                // Get checked difficulties
+                const easyChecked = $('#difficultyEasy').is(':checked');
+                const mediumChecked = $('#difficultyMedium').is(':checked');
+                const hardChecked = $('#difficultyHard').is(':checked');
+                
+                // Get current category
+                const category = $('.category-filter a.active').data('category');
+                
+                // Hide all quizzes
+                $('.quiz-card-container').hide();
+                
+                // Show quizzes based on filters
+                if (easyChecked) {
+                    if (category === 'all') {
+                        $('.quiz-card-container[data-difficulty="Easy"]').show();
+                    } else {
+                        $(`.quiz-card-container[data-category="${category}"][data-difficulty="Easy"]`).show();
+                    }
+                }
+                
+                if (mediumChecked) {
+                    if (category === 'all') {
+                        $('.quiz-card-container[data-difficulty="Medium"]').show();
+                    } else {
+                        $(`.quiz-card-container[data-category="${category}"][data-difficulty="Medium"]`).show();
+                    }
+                }
+                
+                if (hardChecked) {
+                    if (category === 'all') {
+                        $('.quiz-card-container[data-difficulty="Hard"]').show();
+                    } else {
+                        $(`.quiz-card-container[data-category="${category}"][data-difficulty="Hard"]`).show();
+                    }
+                }
+                
+                // Show message if no quizzes match filters
+                if ($('.quiz-card-container:visible').length === 0) {
+                    $('#quizContainer').append('<div class="col-12 no-quizzes-message"><div class="alert alert-info">No quizzes match your selected filters.</div></div>');
+                } else {
+                    $('.no-quizzes-message').remove();
+                }
+            }
+            
+            // Search filter
+            $('#quizFilter').on('keyup', function() {
+                const value = $(this).val().toLowerCase();
+                
+                $('.quiz-card-container').each(function() {
+                    const title = $(this).find('.card-title').text().toLowerCase();
+                    const description = $(this).find('.card-text').text().toLowerCase();
+                    
+                    if (title.includes(value) || description.includes(value)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                
+                // Show message if no quizzes match search
+                if ($('.quiz-card-container:visible').length === 0) {
+                    if ($('.no-quizzes-message').length === 0) {
+                        $('#quizContainer').append('<div class="col-12 no-quizzes-message"><div class="alert alert-info">No quizzes match your search.</div></div>');
+                    }
+                } else {
+                    $('.no-quizzes-message').remove();
+                }
+            });
+        });
+    </script>
+}

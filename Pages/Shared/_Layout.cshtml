@@ -4,45 +4,22 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Add cache control meta tags -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <title>@ViewData["Title"] - Quiz App</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/QuizApp.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        html,
-        body {
-            height: 100%;
-        }
-
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        main {
-            flex: 1 0 auto;
-        }
-    </style>
 </head>
 
 <body>
-    <!-- We'll add the attribute via JavaScript instead -->
-    <script>
-        if (document.cookie.indexOf('AspNetCore.Identity.Application') !== -1) {
-            document.body.setAttribute('data-requires-auth', 'true');
-        }
-    </script>
-
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm py-3">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">Quiz App</a>
+                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-page="/Index">
+                    <i class="bi bi-mortarboard-fill text-primary me-2" style="font-size: 1.5rem;"></i>
+                    <span>Quiz App</span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
                     aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -50,20 +27,46 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">
+                                <i class="bi bi-house-door me-1"></i> Home
+                            </a>
                         </li>
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/Quizzes/Index">Quizzes</a>
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Quizzes/Index">
+                                    <i class="bi bi-journals me-1"></i> Quizzes
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/User/Dashboard/Index">My Dashboard</a>
+                                <a class="nav-link text-dark" asp-area="" asp-page="/User/Dashboard/Index">
+                                    <i class="bi bi-speedometer2 me-1"></i> My Dashboard
+                                </a>
                             </li>
                             @if (User.IsInRole("Administrator"))
                             {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-page="/Admin/Dashboard/Index">Admin Dashboard</a>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-shield-lock me-1"></i> Admin
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                        <li>
+                                            <a class="dropdown-item" asp-area="" asp-page="/Admin/Dashboard/Index">
+                                                <i class="bi bi-speedometer2 me-1"></i> Admin Dashboard
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-area="" asp-page="/Admin/Quizzes/Index">
+                                                <i class="bi bi-file-earmark-text me-1"></i> Manage Quizzes
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-area="" asp-page="/Admin/Users/Index">
+                                                <i class="bi bi-people me-1"></i> Manage Users
+                                            </a>
+                                        </li>
+                                    </ul>
                                 </li>
                             }
                         }
@@ -73,21 +76,76 @@
             </div>
         </nav>
     </header>
-    <div class="container">
+
+    <div class="container mt-4">
         <main role="main" class="pb-3">
+            @if (TempData["StatusMessage"] != null)
+            {
+                var statusMessage = TempData["StatusMessage"].ToString();
+                var statusType = statusMessage?.StartsWith("Error") == true ? "danger" : "success";
+                <div data-status-message="@statusMessage" data-status-type="@statusType" style="display: none;"></div>
+            }
+            
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="footer mt-5 py-4">
         <div class="container">
-            &copy; @DateTime.Now.Year - Quiz App
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-mortarboard-fill text-primary me-2" style="font-size: 1.5rem;"></i>
+                        <span class="fw-bold text-primary">Quiz App</span>
+                    </div>
+                    <p class="text-muted">Test your knowledge, track your progress, and challenge yourself with our interactive quizzes.</p>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="mb-3">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/" class="text-decoration-none text-muted"><i class="bi bi-chevron-right"></i> Home</a></li>
+                        <li class="mb-2"><a href="/Quizzes/Index" class="text-decoration-none text-muted"><i class="bi bi-chevron-right"></i> Quizzes</a></li>
+                        <li class="mb-2"><a href="/Privacy" class="text-decoration-none text-muted"><i class="bi bi-chevron-right"></i> Privacy</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="mb-3">Connect</h5>
+                    <div class="d-flex">
+                        <a href="#" class="text-decoration-none me-3">
+                            <i class="bi bi-facebook fs-4 text-primary"></i>
+                        </a>
+                        <a href="#" class="text-decoration-none me-3">
+                            <i class="bi bi-twitter-x fs-4 text-dark"></i>
+                        </a>
+                        <a href="#" class="text-decoration-none me-3">
+                            <i class="bi bi-linkedin fs-4 text-primary"></i>
+                        </a>
+                        <a href="#" class="text-decoration-none">
+                            <i class="bi bi-instagram fs-4 text-danger"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="m-0 text-muted">&copy; @DateTime.Now.Year - Quiz App. All rights reserved.</p>
+                <a href="#" class="btn btn-sm btn-outline-primary" id="backToTop">
+                    <i class="bi bi-arrow-up"></i> Back to top
+                </a>
+            </div>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Back to top button functionality
+        document.getElementById('backToTop').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

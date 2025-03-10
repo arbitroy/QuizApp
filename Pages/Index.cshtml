@@ -4,96 +4,197 @@
     ViewData["Title"] = "Home";
 }
 
-<div class="jumbotron text-center mb-4 p-5 bg-light">
-    <h1 class="display-4">Welcome to Quiz App</h1>
-    <p class="lead">Test your knowledge with our collection of quizzes!</p>
-    @if (User.Identity != null && User.Identity.IsAuthenticated)
-    {
-        <a asp-page="/Quizzes/Index" class="btn btn-primary btn-lg">View All Quizzes</a>
-    }
-    else
-    {
-        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg">Login</a>
-        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-secondary btn-lg">Register</a>
-    }
+<div class="custom-jumbotron text-center mb-5 animate-on-scroll">
+    <div class="container">
+        <h1 class="display-4">Welcome to QuizApp</h1>
+        <p class="lead">Challenge yourself with our interactive quizzes and track your progress!</p>
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <a asp-page="/Quizzes/Index" class="btn btn-light btn-lg">View All Quizzes</a>
+            <a asp-page="/User/Dashboard/Index" class="btn btn-outline-light btn-lg">My Dashboard</a>
+        }
+        else
+        {
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-light btn-lg">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-light btn-lg">
+                <i class="bi bi-person-plus"></i> Register
+            </a>
+        }
+    </div>
 </div>
 
 @if (Model.RecentQuizzes != null && Model.RecentQuizzes.Any())
 {
-    <h2 class="text-center mb-4">Recent Quizzes</h2>
+    <div class="container">
+        <h2 class="text-center mb-4 animate-on-scroll">Popular Quizzes</h2>
 
-    <div class="row">
-        @foreach (var quiz in Model.RecentQuizzes)
-        {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">@quiz.Title</h5>
-                        <p class="card-text">@quiz.Description</p>
-                        <p class="card-text"><small class="text-muted">Time Limit: @quiz.TimeLimit minutes</small></p>
-                    </div>
-                    <div class="card-footer">
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
-                        {
-                            <a asp-page="/Quizzes/Take" asp-route-id="@quiz.Id" class="btn btn-primary">Take Quiz</a>
-                        }
-                        else
-                        {
-                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary">Login to Take Quiz</a>
-                        }
+        <div class="row">
+            @foreach (var quiz in Model.RecentQuizzes)
+            {
+                <div class="col-md-4 mb-4 animate-on-scroll">
+                    <div class="card quiz-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h5 class="card-title">@quiz.Title</h5>
+                                <span class="badge rounded-pill bg-primary">@quiz.Questions.Count Q</span>
+                            </div>
+                            <p class="card-text">@quiz.Description</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted"><i class="bi bi-clock"></i> @quiz.TimeLimit minutes</span>
+                                <span class="text-muted"><i class="bi bi-calendar3"></i> @quiz.CreatedAt.ToString("MMM dd")</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            {
+                                <a asp-page="/Quizzes/Take" asp-route-id="@quiz.Id" class="btn btn-primary w-100">
+                                    <i class="bi bi-play-fill"></i> Take Quiz
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary w-100">
+                                    <i class="bi bi-box-arrow-in-right"></i> Login to Take Quiz
+                                </a>
+                            }
+                        </div>
                     </div>
                 </div>
-            </div>
-        }
+            }
+        </div>
     </div>
 }
 
-<div class="row mt-5">
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">User Features</h5>
+<div class="container mt-5">
+    <div class="row animate-on-scroll">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="card-title mb-0"><i class="bi bi-person-fill"></i> User Features</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Take quizzes on various topics
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Track your progress and scores
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Review your quiz history
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Manage your profile
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Take quizzes on various topics</li>
-                    <li class="list-group-item">Track your progress and scores</li>
-                    <li class="list-group-item">Review your quiz history</li>
-                    <li class="list-group-item">Manage your profile</li>
-                </ul>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-gradient-success text-white">
+                    <h5 class="card-title mb-0"><i class="bi bi-gear-fill"></i> Admin Features</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Create and manage quizzes
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            User management and tracking
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Reset user passwords
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            View all activity in the system
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-gradient-info text-white">
+                    <h5 class="card-title mb-0"><i class="bi bi-info-circle-fill"></i> Getting Started</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge rounded-pill bg-primary me-2">1</span>
+                            Register for an account
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge rounded-pill bg-primary me-2">2</span>
+                            Browse available quizzes
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge rounded-pill bg-primary me-2">3</span>
+                            Select a quiz to take
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge rounded-pill bg-primary me-2">4</span>
+                            Submit your answers to get scored
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0">Admin Features</h5>
+<div class="container mt-5 mb-5 animate-on-scroll">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <h2 class="mb-4">Why Use QuizApp?</h2>
+            <div class="d-flex mb-4">
+                <div class="me-3">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                    </div>
+                </div>
+                <div>
+                    <h4>Learn at Your Own Pace</h4>
+                    <p>Take quizzes whenever you want, as many times as you need. Track your improvement over time.</p>
+                </div>
             </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Create and manage quizzes</li>
-                    <li class="list-group-item">User management and tracking</li>
-                    <li class="list-group-item">Reset user passwords</li>
-                    <li class="list-group-item">View all activity in the system</li>
-                </ul>
+            <div class="d-flex mb-4">
+                <div class="me-3">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                </div>
+                <div>
+                    <h4>Track Your Progress</h4>
+                    <p>Detailed analytics and performance tracking help you identify strengths and areas for improvement.</p>
+                </div>
+            </div>
+            <div class="d-flex">
+                <div class="me-3">
+                    <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                </div>
+                <div>
+                    <h4>Challenge Yourself</h4>
+                    <p>Test your knowledge with timed quizzes on various topics and challenge yourself to improve.</p>
+                </div>
             </div>
         </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0">Getting Started</h5>
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Register for an account</li>
-                    <li class="list-group-item">Browse available quizzes</li>
-                    <li class="list-group-item">Select a quiz to take</li>
-                    <li class="list-group-item">Submit your answers to get scored</li>
-                </ul>
-            </div>
+        <div class="col-md-6 text-center">
+            <img src="/api/placeholder/500/400" alt="Quiz App Benefits" class="img-fluid rounded shadow-lg" />
         </div>
     </div>
 </div>

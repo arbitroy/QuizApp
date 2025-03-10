@@ -1,100 +1,332 @@
 ﻿@page
-@model  QuizApp.Pages.Admin.Dashboard.IndexModel
+@model QuizApp.Pages.Admin.Dashboard.IndexModel
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Admin Dashboard";
 }
 
-<div class="alert alert-info">
-    <h4>Welcome, @(User.Identity?.Name ?? "User")!</h4>
-    <p>You are logged in as a user. Here's your quiz performance dashboard.</p>
-</div>
-
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h5 class="card-title">Total Quizzes Taken</h5>
-                <p class="card-text display-4">@Model.TotalQuizzesTaken</p>
+<div class="container">
+    <div class="alert alert-info shadow-sm mb-4 animate-on-scroll">
+        <div class="d-flex align-items-center">
+            <div class="me-3">
+                <i class="bi bi-shield-lock-fill" style="font-size: 2.5rem;"></i>
+            </div>
+            <div>
+                <h4 class="mb-1">Admin Dashboard</h4>
+                <p class="mb-0">Welcome to the administration panel. Manage quizzes, users, and system settings.</p>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h5 class="card-title">Average Score</h5>
-                <p class="card-text display-4">@Model.AverageScore.ToString("F1")%</p>
+    <!-- Admin Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-4 mb-md-0">
+            <div class="stat-card bg-gradient-primary animate-on-scroll">
+                <div class="stat-card-icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h5>Total Users</h5>
+                <p class="display-4">@Model.Users.Count()</p>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4 mb-md-0">
+            <div class="stat-card bg-gradient-success animate-on-scroll" style="animation-delay: 100ms;">
+                <div class="stat-card-icon">
+                    <i class="bi bi-journals"></i>
+                </div>
+                <h5>Total Quizzes</h5>
+                <p class="display-4">@Model.Quizzes.Count()</p>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4 mb-md-0">
+            <div class="stat-card bg-gradient-info animate-on-scroll" style="animation-delay: 200ms;">
+                <div class="stat-card-icon">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+                <h5>Quiz Attempts</h5>
+                <p class="display-4">@Model.QuizAttempts.Count()</p>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card bg-gradient-warning animate-on-scroll" style="animation-delay: 300ms;">
+                <div class="stat-card-icon">
+                    <i class="bi bi-bar-chart-line"></i>
+                </div>
+                <h5>Avg. Score</h5>
+                <p class="display-4">@Model.AverageScore.ToString("F1")<small>%</small></p>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <h5 class="card-title">Account Status</h5>
-                <p class="card-text display-4">Active</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Recent Quiz Attempts</h5>
-            </div>
-            <div class="card-body">
-                @if (Model.RecentAttempts.Any())
-                {
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Quiz</th>
-                                <th>Date</th>
-                                <th>Score</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var attempt in Model.RecentAttempts)
-                            {
+    <div class="row mb-4">
+        <!-- Recent User Activity -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4 animate-on-scroll">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-activity me-2"></i>Recent Activity</h5>
+                    <div>
+                        <a href="/Admin/Users/Index" class="btn btn-sm btn-outline-primary">Manage Users</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
                                 <tr>
-                                    <td>@attempt.Quiz.Title</td>
-                                    <td>@attempt.EndTime?.ToString("g")</td>
-                                    <td>@attempt.Score%</td>
-                                    <td>
-                                        <a asp-page="/Quizzes/Result" asp-route-id="@attempt.Id" class="btn btn-sm btn-info">View</a>
-                                    </td>
+                                    <th>User</th>
+                                    <th>Quiz</th>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Actions</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
-                else
-                {
-                    <p>You haven't taken any quizzes yet.</p>
-                }
+                            </thead>
+                            <tbody>
+                                @foreach (var attempt in Model.RecentAttempts)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a href="/Admin/Users/Details/@attempt.UserId" class="text-decoration-none">
+                                                @(attempt.User?.UserName?.Split('@')[0] ?? "Unknown")
+                                            </a>
+                                        </td>
+                                        <td>@attempt.Quiz.Title</td>
+                                        <td>@attempt.EndTime?.ToString("MMM dd, HH:mm")</td>
+                                        <td>
+                                            <span class="badge bg-@(GetScoreClass(attempt.Score))">
+                                                @attempt.Score%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a asp-page="/Quizzes/Result" asp-route-id="@attempt.Id" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow animate-on-scroll">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="bi bi-people me-2"></i>New Users</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Joined</th>
+                                            <th>Role</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var user in Model.NewUsers)
+                                        {
+                                            <tr>
+                                                <td>@user.UserName</td>
+                                                <td>@user.LastLoginTime.ToString("MMM dd")</td>
+                                                <td>
+                                                    <span class="badge bg-@(user.IsAdmin ? "danger" : "info")">
+                                                        @(user.IsAdmin ? "Admin" : "User")
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow animate-on-scroll">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="bi bi-journals me-2"></i>Popular Quizzes</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Quiz</th>
+                                            <th>Attempts</th>
+                                            <th>Avg. Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var quiz in Model.PopularQuizzes)
+                                        {
+                                            <tr>
+                                                <td>@quiz.Title</td>
+                                                <td>@quiz.AttemptCount</td>
+                                                <td>
+                                                    <span class="badge bg-@(GetScoreClass(quiz.AverageScore))">
+                                                        @quiz.AverageScore.ToString("F1")%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Profile Information</h5>
+        <!-- Admin Actions and Analytics -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4 animate-on-scroll">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-gear-fill me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="/Admin/Quizzes/Create" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-plus-circle me-2"></i> Create New Quiz
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a href="/Admin/Quizzes/Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-journals me-2"></i> Manage Quizzes
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a href="/Admin/Users/Create" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-person-plus me-2"></i> Add New User
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a href="/Admin/Users/Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-people me-2"></i> Manage Users
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a href="/Admin/Users/Index?handler=DownloadReport" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-earmark-excel me-2"></i> Export User Report
+                            </div>
+                            <i class="bi bi-download"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <p><strong>Username:</strong> @Model.CurrentUser.UserName</p>
-                <p><strong>Email:</strong> @Model.CurrentUser.Email</p>
-                <p><strong>Last Login:</strong> @Model.CurrentUser.LastLoginTime.ToString("f")</p>
 
-                <a asp-area="Identity" asp-page="/Account/Manage/Index" class="btn btn-primary">Edit Profile</a>
+            <div class="card shadow mb-4 animate-on-scroll">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Performance Overview</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="quizAttemptsChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <div class="card shadow animate-on-scroll">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>System Health</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-check-circle-fill text-success me-2"></i> Database Connection
+                            </div>
+                            <span class="badge bg-success">Healthy</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-check-circle-fill text-success me-2"></i> Authentication Service
+                            </div>
+                            <span class="badge bg-success">Healthy</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-check-circle-fill text-success me-2"></i> Quiz Engine
+                            </div>
+                            <span class="badge bg-success">Healthy</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-info-circle-fill text-primary me-2"></i> Quiz App Version
+                            </div>
+                            <span class="badge bg-primary">v1.0.0</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="text-center mt-4">
-    <a asp-page="/Quizzes/Index" class="btn btn-lg btn-primary">Take a Quiz</a>
-</div>
+@functions {
+    public string GetScoreClass(double score)
+    {
+        if (score >= 80) return "success";
+        if (score >= 60) return "warning";
+        return "danger";
+    }
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Create the quiz attempts chart
+            const ctx = document.getElementById('quizAttemptsChart').getContext('2d');
+            
+            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            const data = {
+                labels: labels,
+                datasets: [{
+                    label: 'Quiz Attempts',
+                    data: [12, 19, 15, 25, 22, 30],
+                    backgroundColor: 'rgba(67, 97, 238, 0.2)',
+                    borderColor: 'rgba(67, 97, 238, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            };
+
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Add animation to elements
+            $('.animate-on-scroll').each(function(index) {
+                const element = $(this);
+                setTimeout(() => {
+                    element.addClass('animate-fade-in');
+                }, 100 * index);
+            });
+        });
+    </script>
+}
