@@ -3,9 +3,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using QuizApp.Data;
 using QuizApp.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace QuizApp.Pages.Admin.Users
@@ -14,10 +17,12 @@ namespace QuizApp.Pages.Admin.Users
     public class IndexModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationDbContext _context;
         
-        public IndexModel(UserManager<ApplicationUser> userManager)
+        public IndexModel(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
             _userManager = userManager;
+            _context = context;
         }
 
         public IList<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
@@ -31,6 +36,70 @@ namespace QuizApp.Pages.Admin.Users
         public async Task OnGetAsync()
         {
             Users = await _userManager.Users.ToListAsync();
+        }
+
+        public async Task<IActionResult> OnGetDownloadReportAsync()
+        {
+            // Get all users with their quiz attempts
+            var users = await _userManager.Users
+                .Include(u => u.QuizAttempts)
+                .ToListAsync();
+            
+            var userReportData = new List<UserReportData>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var roleName = roles.Any() ? string.Join(", ", roles) : "No Role";
+                
+                // Get quiz statistics
+                var completedQuizzes = user.QuizAttempts.Count(a => a.EndTime != null);
+                var averageScore = user.QuizAttempts
+                    .Where(a => a.EndTime != null)
+                    .Select(a => a.Score)
+                    .DefaultIfEmpty(0)
+                    .Average();
+                
+                // Get last login timestamp
+                var lastLoginFormatted = user.LastLoginTime.ToString("yyyy-MM-dd HH:mm:ss");
+                
+                userReportData.Add(new UserReportData
+                {
+                    Username = user.UserName ?? "N/A",
+                    Email = user.Email ?? "N/A",
+                    Role = roleName,
+                    LastLoginTime = lastLoginFormatted,
+                    QuizAttempts = completedQuizzes,
+                    AverageScore = Math.Round(averageScore, 1),
+                    IsEmailConfirmed = user.EmailConfirmed ? "Yes" : "No",
+                    UserId = user.Id
+                });
+            }
+
+            // Create CSV content
+            var csv = new StringBuilder();
+            csv.AppendLine("User ID,Username,Email,Role,Last Login,Quiz Attempts,Average Score (%),Email Confirmed");
+            
+            foreach (var userData in userReportData)
+            {
+                csv.AppendLine($"\"{userData.UserId}\",\"{userData.Username}\",\"{userData.Email}\",\"{userData.Role}\",\"{userData.LastLoginTime}\",{userData.QuizAttempts},{userData.AverageScore},\"{userData.IsEmailConfirmed}\"");
+            }
+
+            // Set the response headers for file download
+            byte[] bytes = Encoding.UTF8.GetBytes(csv.ToString());
+            return File(bytes, "text/csv", $"user-report-{DateTime.Now:yyyy-MM-dd}.csv");
+        }
+
+        public class UserReportData
+        {
+            public string UserId { get; set; } = string.Empty;
+            public string Username { get; set; } = string.Empty;
+            public string Email { get; set; } = string.Empty;
+            public string Role { get; set; } = string.Empty;
+            public string LastLoginTime { get; set; } = string.Empty;
+            public int QuizAttempts { get; set; }
+            public double AverageScore { get; set; }
+            public string IsEmailConfirmed { get; set; } = string.Empty;
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(string id)
