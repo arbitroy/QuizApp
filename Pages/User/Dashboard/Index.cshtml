@@ -1,0 +1,206 @@
+@page
+@model QuizApp.Pages.User.Dashboard.IndexModel
+@{
+    ViewData["Title"] = "User Dashboard";
+}
+
+<div class="alert alert-info">
+    <h4>Welcome, @(User.Identity?.Name ?? "User")!</h4>
+    <p>Track your progress and take quizzes to improve your knowledge.</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">Total Quizzes Taken</h5>
+                <p class="card-text display-4">@Model.TotalQuizzesTaken</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">Average Score</h5>
+                <p class="card-text display-4">@Model.AverageScore.ToString("F1")%</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">Best Score</h5>
+                <p class="card-text display-4">@Model.BestScore.ToString("F0")%</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Recent Quiz Attempts</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentAttempts.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Quiz</th>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Time Spent</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var attempt in Model.RecentAttempts)
+                                {
+                                    <tr>
+                                        <td>@attempt.Quiz.Title</td>
+                                        <td>@attempt.EndTime?.ToString("g")</td>
+                                        <td>
+                                            @attempt.Score%
+                                            @if (attempt.Score >= 80)
+                                            {
+                                                <span class="badge bg-success ms-1">Excellent</span>
+                                            }
+                                            else if (attempt.Score >= 60)
+                                            {
+                                                <span class="badge bg-warning ms-1">Good</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger ms-1">Needs Work</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @{
+                                                var duration = attempt.EndTime - attempt.StartTime;
+                                                @(duration.HasValue ? $"{duration.Value.TotalMinutes:F1} min" : "N/A")
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-page="/Quizzes/Result" asp-route-id="@attempt.Id" class="btn btn-sm btn-info">Review</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (Model.TotalQuizzesTaken > Model.RecentAttempts.Count)
+                    {
+                        <div class="text-center mt-3">
+                            <a asp-page="./History" class="btn btn-outline-primary">View All History</a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-light">
+                        <p>You haven't taken any quizzes yet.</p>
+                        <a asp-page="/Quizzes/Index" class="btn btn-primary">Start a Quiz Now</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Recommended Quizzes</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.RecommendedQuizzes.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var quiz in Model.RecommendedQuizzes)
+                        {
+                            <a href="/Quizzes/Take/@quiz.Id" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">@quiz.Title</h6>
+                                    <small>@quiz.TimeLimit min</small>
+                                </div>
+                                <p class="mb-1 text-truncate">@quiz.Description</p>
+                                <small>@quiz.Questions.Count questions</small>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>No quiz recommendations available.</p>
+                }
+            </div>
+            <div class="card-footer">
+                <a asp-page="/Quizzes/Index" class="btn btn-primary w-100">Browse All Quizzes</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Your Progress</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.CategoryPerformance.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Quizzes Taken</th>
+                                    <th>Average Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var categoryStats in Model.CategoryPerformance)
+                                {
+                                    <tr>
+                                        <td>@(string.IsNullOrEmpty(categoryStats.Category) ? "General" : categoryStats.Category)</td>
+                                        <td>@categoryStats.Count</td>
+                                        <td>@categoryStats.AverageScore.ToString("F1")%</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p>Take more quizzes to see your performance by category.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-page="/Quizzes/Index" class="btn btn-primary">Take a New Quiz</a>
+                    <a asp-area="Identity" asp-page="/Account/Manage/Index" class="btn btn-outline-secondary">Manage Account</a>
+                    @if (Model.LastAttempt != null)
+                    {
+                        <a asp-page="/Quizzes/Result" asp-route-id="@Model.LastAttempt.Id" class="btn btn-outline-info">
+                            View Last Quiz Result
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,9 +1,8 @@
-// Updated Program.cs with missing extension methods
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using QuizApp.Data;
 using QuizApp.Models;
-using Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore; // Add this namespace
+using Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +30,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/Admin", "RequireAdministratorRole");
+    options.Conventions.AuthorizeFolder("/User"); // Authorize the User folder
 });
 
 builder.Services.AddAuthorization(options =>

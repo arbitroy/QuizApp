@@ -45,7 +45,15 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-page="/Quizzes/Index">Quizzes</a>
                             </li>
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Admin/Dashboard/Index">Dashboard</a>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/User/Dashboard/Index">My Dashboard</a>
+                            </li>
+                            @if (User.IsInRole("Administrator"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/Admin/Dashboard/Index">Admin Dashboard</a>
+                                </li>
+                            }
                         }
                     </ul>
                     <partial name="_LoginPartial" />

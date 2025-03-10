@@ -1,0 +1,201 @@
+@page
+@model QuizApp.Pages.User.Dashboard.HistoryModel
+@{
+    ViewData["Title"] = "Quiz History";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">All Quiz Attempts</h5>
+                <div>
+                    <a asp-page="./Index" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (Model.QuizAttempts.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>Quiz Title</th>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Duration</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var attempt in Model.QuizAttempts)
+                                {
+                                    <tr>
+                                        <td>@attempt.Quiz.Title</td>
+                                        <td>@attempt.EndTime?.ToString("g")</td>
+                                        <td>
+                                            @attempt.Score%
+                                            @if (attempt.Score >= 80)
+                                            {
+                                                <span class="badge bg-success ms-1">Excellent</span>
+                                            }
+                                            else if (attempt.Score >= 60)
+                                            {
+                                                <span class="badge bg-warning ms-1">Good</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger ms-1">Needs Work</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @{
+                                                var duration = attempt.EndTime - attempt.StartTime;
+                                                @(duration.HasValue ? $"{duration.Value.TotalMinutes:F1} min" : "N/A")
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-page="/Quizzes/Result" asp-route-id="@attempt.Id" class="btn btn-sm btn-info">View Results</a>
+                                            
+                                            @if (Model.CompletedQuizIds.Contains(attempt.QuizId))
+                                            {
+                                                <a asp-page="/Quizzes/Take" asp-route-id="@attempt.QuizId" class="btn btn-sm btn-outline-primary">Retake Quiz</a>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <p>You haven't completed any quizzes yet.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Performance Over Time</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.QuizAttempts.Count > 0)
+                {
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                }
+                else
+                {
+                    <p>Complete some quizzes to see your performance trends.</p>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Quiz Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="card bg-light mb-3">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Total Quizzes</h6>
+                                <p class="card-text fs-2">@Model.QuizAttempts.Count</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-light mb-3">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Average Score</h6>
+                                <p class="card-text fs-2">@Model.AverageScore.ToString("F1")%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-light mb-3">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Best Score</h6>
+                                <p class="card-text fs-2">@Model.BestScore.ToString("F0")%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-light mb-3">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Avg. Duration</h6>
+                                <p class="card-text fs-2">@Model.AverageDuration.ToString("F1") min</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            @if (Model.QuizAttempts.Count > 0)
+            {
+                <text>
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+                
+                // Prepare data for chart
+                const dates = [@Html.Raw(string.Join(",", Model.QuizAttempts.Select(a => $"'{a.EndTime?.ToString("MM/dd")}'").Reverse()))];
+                const scores = [@Html.Raw(string.Join(",", Model.QuizAttempts.Select(a => a.Score).Reverse()))];
+                
+                const performanceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: 'Quiz Scores (%)',
+                            data: scores,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.1,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+                </text>
+            }
+            
+            // Add sorting to the table
+            $('#historyTable').DataTable({
+                "order": [[1, "desc"]],
+                "paging": true,
+                "pageLength": 10,
+                "lengthChange": false
+            });
+        });
+    </script>
+}
