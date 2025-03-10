@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using QuizApp.Data;
 using QuizApp.Models;
@@ -13,7 +12,7 @@ using System.Threading.Tasks;
 namespace QuizApp.Pages.User.Dashboard
 {
     [Authorize]
-    public class IndexModel : PageModel
+    public class IndexModel : SecurePageModel
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -43,6 +42,12 @@ namespace QuizApp.Pages.User.Dashboard
 
         public async Task<IActionResult> OnGetAsync()
         {
+            // This check is redundant with our SecurePageModel, but we'll keep it for extra safety
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+            
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
