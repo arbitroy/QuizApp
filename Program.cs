@@ -1,9 +1,13 @@
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using QuizApp;
+using QuizApp.Api.Controllers;
 using QuizApp.Data;
+using QuizApp.Middleware;
 using QuizApp.Models;
 using System.Text;
 
@@ -59,12 +63,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("ApiCorsPolicy", policy =>
     {
-        policy.WithOrigins(
-                builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:3000" }
-            )
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+        policy.AllowAnyOrigin() 
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
@@ -141,6 +142,12 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
+builder.Services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
+
+
+builder.Services.AddScoped<IDbConnectionHealthCheck, DbConnectionHealthCheck>();
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"));
@@ -170,7 +177,7 @@ else
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-
+app.UseRequestLogging();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -188,11 +195,9 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Add CORS middleware
-app.UseCors("ApiCorsPolicy");
-
 app.UseRouting();
 app.UseSession();
+app.UseCors("ApiCorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 

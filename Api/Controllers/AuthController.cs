@@ -35,25 +35,36 @@ namespace QuizApp.Api.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> Login(LoginRequestDto model)
         {
-            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
-
-            if (!result.Succeeded)
+            try
             {
-                return Unauthorized(new { Message = "Invalid login attempt" });
-            }
+                // Find user by email directly
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    return Unauthorized(new { Message = "Invalid email or password" });
+                }
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
+                // Verify password directly (more efficient for APIs)
+                var isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
+                if (!isPasswordValid)
+                {
+                    return Unauthorized(new { Message = "Invalid email or password" });
+                }
+
+                // Update last login time
+                user.LastLoginTime = DateTime.Now;
+                await _userManager.UpdateAsync(user);
+
+                // Generate token
+                var token = await GenerateJwtToken(user);
+                return Ok(token);
+            }
+            catch (Exception ex)
             {
-                return Unauthorized(new { Message = "Invalid login attempt" });
+                // Log the exception
+                Console.WriteLine($"Login error: {ex}");
+                return StatusCode(500, new { Message = "An error occurred during login. Please try again." });
             }
-
-            // Update last login time
-            user.LastLoginTime = DateTime.Now;
-            await _userManager.UpdateAsync(user);
-
-            var token = await GenerateJwtToken(user);
-            return Ok(token);
         }
 
         // POST: api/auth/register
@@ -98,48 +109,59 @@ namespace QuizApp.Api.Controllers
 
         private async Task<AuthResponseDto> GenerateJwtToken(ApplicationUser user)
         {
-            var userRoles = await _userManager.GetRolesAsync(user);
-
-            var claims = new List<Claim>
+            try
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Name, user.UserName)
-            };
+                // Get user roles (potential database operation)
+                var userRoles = await _userManager.GetRolesAsync(user);
 
-            foreach (var role in userRoles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
+                // Create minimal claims
+                var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.Now.AddDays(1);
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: expires,
-                signingCredentials: creds
-            );
-
-            // In a real application, you would generate a proper refresh token and store it
-            var refreshToken = Guid.NewGuid().ToString();
-
-            return new AuthResponseDto
-            {
-                Token = new JwtSecurityTokenHandler().WriteToken(token),
-                RefreshToken = refreshToken,
-                ExpiresAt = expires,
-                User = new UserDto
+                // Add roles as a single claim to reduce token size
+                if (userRoles.Any())
                 {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email
+                    claims.Add(new Claim("roles", string.Join(",", userRoles)));
                 }
-            };
+
+                // Use cached key if possible
+                var keyBytes = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ??
+                    throw new InvalidOperationException("JWT Key is missing in configuration"));
+                var key = new SymmetricSecurityKey(keyBytes);
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                var expires = DateTime.UtcNow.AddDays(7); // Consider longer expiration
+
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["Jwt:Issuer"],
+                    audience: _configuration["Jwt:Audience"],
+                    claims: claims,
+                    expires: expires,
+                    signingCredentials: creds
+                );
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                return new AuthResponseDto
+                {
+                    Token = tokenHandler.WriteToken(token),
+                    RefreshToken = Guid.NewGuid().ToString(),
+                    ExpiresAt = expires,
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        UserName = user.UserName ?? user.Email ?? "User",
+                        Email = user.Email
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Token generation error: {ex}");
+                throw;
+            }
         }
     }
 }
