@@ -14,7 +14,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -34,18 +34,39 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Add JWT Authentication
+// IMPORTANT CHANGE: Separate web and API authentication
 builder.Services.AddAuthentication(options =>
 {
-    // Keep cookie as the default for the web app
-    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+    // These are defaults only for web app (not for API)
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
 })
 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
     options.SaveToken = true;
     options.RequireHttpsMetadata = false;
+
+    // IMPORTANT CHANGE: Prevent redirects for API authentication failures
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = async context =>
+        {
+            // Skip the default logic
+            context.HandleResponse();
+
+            // Return 401 with JSON error instead of redirect
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(
+                System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    error = "Unauthorized",
+                    message = "Authentication failed. Please login again."
+                })
+            );
+        }
+    };
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -58,12 +79,13 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
+
 // Add CORS policy for API clients
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ApiCorsPolicy", policy =>
     {
-        policy.AllowAnyOrigin() 
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -104,9 +126,9 @@ builder.Services.AddControllers();
 // Add Swagger for API documentation
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo 
-    { 
-        Title = "QuizApp API", 
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "QuizApp API",
         Version = "v1",
         Description = "API for the QuizApp platform",
         Contact = new OpenApiContact
@@ -142,15 +164,27 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
 builder.Services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
-
-
 builder.Services.AddScoped<IDbConnectionHealthCheck, DbConnectionHealthCheck>();
 
+// IMPORTANT CHANGE: Create new authorization policies
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"));
+    // Policy for web admin pages
+    options.AddPolicy("RequireAdministratorRole", policy =>
+        policy.RequireRole("Administrator"));
+
+    // Policy for API endpoints
+    options.AddPolicy("ApiRequiresAuthentication", policy => {
+        policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+        policy.RequireAuthenticatedUser();
+    });
+
+    // Policy for admin API endpoints
+    options.AddPolicy("ApiRequiresAdminRole", policy => {
+        policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+        policy.RequireRole("Administrator");
+    });
 });
 
 // Add response caching settings
@@ -167,7 +201,7 @@ if (app.Environment.IsDevelopment())
 {
     // This line needed the added package
     app.UseMigrationsEndPoint();
-    
+
     // Add Swagger UI in development
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "QuizApp API v1"));
@@ -177,6 +211,7 @@ else
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
 app.UseRequestLogging();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -191,7 +226,7 @@ app.Use(async (context, next) =>
         context.Response.Headers["Pragma"] = "no-cache";
         context.Response.Headers["Expires"] = "0";
     }
-    
+
     await next();
 });
 
@@ -201,9 +236,9 @@ app.UseCors("ApiCorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
+// IMPORTANT: Map controllers with a specific route prefix for API
+app.MapControllers().RequireAuthorization("ApiRequiresAuthentication");
 app.MapRazorPages();
-// Map API controllers
-app.MapControllers();
 
 // Add authentication check endpoint for client-side validation
 app.MapGet("/api/auth/check", (HttpContext context) => {
@@ -212,7 +247,7 @@ app.MapGet("/api/auth/check", (HttpContext context) => {
         return Results.Unauthorized();
     }
     return Results.Ok();
-}).RequireAuthorization();
+}).RequireAuthorization("ApiRequiresAuthentication");
 
 // Create roles and admin user
 using (var scope = app.Services.CreateScope())
@@ -223,7 +258,7 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<ApplicationDbContext>();
         // Create the database and apply migrations
         context.Database.Migrate();
-        
+
         // Now seed the data after tables are created
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();

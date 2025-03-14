@@ -15,7 +15,7 @@ namespace QuizApp.Api.Controllers
 {
     [Route("api/admin")]
     [ApiController]
-    [Authorize(Policy = "RequireAdministratorRole")]
+    [Authorize(Policy = "ApiRequiresAdminRole")] 
     public class AdminController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

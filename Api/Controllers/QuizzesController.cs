@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -85,7 +86,7 @@ namespace QuizApp.Api.Controllers
 
         // POST: api/quizzes/take
         [HttpPost("take")]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult<QuizResultDto>> TakeQuiz(QuizSubmissionDto submission)
         {
             var userId = _userManager.GetUserId(User);
@@ -157,7 +158,7 @@ namespace QuizApp.Api.Controllers
 
         // GET: api/quizzes/result/5
         [HttpGet("result/{attemptId}")]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult<QuizResultDto>> GetQuizResult(int attemptId)
         {
             var userId = _userManager.GetUserId(User);

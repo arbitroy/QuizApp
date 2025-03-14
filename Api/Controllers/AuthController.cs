@@ -37,26 +37,33 @@ namespace QuizApp.Api.Controllers
         {
             try
             {
+                Console.WriteLine($"Login attempt for email: {model.Email} from IP: {HttpContext.Connection.RemoteIpAddress}");
+
                 // Find user by email directly
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 if (user == null)
                 {
+                    Console.WriteLine("User not found");
                     return Unauthorized(new { Message = "Invalid email or password" });
                 }
 
+                Console.WriteLine("User found, checking password");
                 // Verify password directly (more efficient for APIs)
                 var isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
                 if (!isPasswordValid)
                 {
+                    Console.WriteLine("Password invalid");
                     return Unauthorized(new { Message = "Invalid email or password" });
                 }
 
+                Console.WriteLine("Password valid, generating token");
                 // Update last login time
                 user.LastLoginTime = DateTime.Now;
                 await _userManager.UpdateAsync(user);
 
                 // Generate token
                 var token = await GenerateJwtToken(user);
+                Console.WriteLine("Login successful");
                 return Ok(token);
             }
             catch (Exception ex)
