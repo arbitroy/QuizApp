@@ -237,7 +237,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // IMPORTANT: Map controllers with a specific route prefix for API
-app.MapControllers().RequireAuthorization("ApiRequiresAuthentication");
+app.MapControllers();
 app.MapRazorPages();
 
 // Add authentication check endpoint for client-side validation
