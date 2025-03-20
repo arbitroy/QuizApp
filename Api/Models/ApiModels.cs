@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using System;
+using QuizApp.Api.Controllers;
 
 namespace QuizApp.Api.Models
 {
@@ -120,6 +121,7 @@ namespace QuizApp.Api.Models
         public double AverageScore { get; set; }
         public double BestScore { get; set; }
         public List<QuizAttemptSummaryDto> RecentAttempts { get; set; } = new List<QuizAttemptSummaryDto>();
+        public List<CategoryStatsDto> CategoryPerformance { get; set; } = new List<CategoryStatsDto>();
     }
 
     public class QuizAttemptSummaryDto

@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using QuizApp.Api.Models;
 using QuizApp.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -20,15 +22,18 @@ namespace QuizApp.Api.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthController> _logger;
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<AuthController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            _logger = logger;
         }
 
         // POST: api/auth/login
@@ -37,39 +42,39 @@ namespace QuizApp.Api.Controllers
         {
             try
             {
-                Console.WriteLine($"Login attempt for email: {model.Email} from IP: {HttpContext.Connection.RemoteIpAddress}");
+                _logger.LogInformation($"Login attempt for email: {model.Email} from IP: {HttpContext.Connection.RemoteIpAddress}");
 
                 // Find user by email directly
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 if (user == null)
                 {
-                    Console.WriteLine("User not found");
+                    _logger.LogWarning("User not found");
                     return Unauthorized(new { Message = "Invalid email or password" });
                 }
 
-                Console.WriteLine("User found, checking password");
+                _logger.LogInformation("User found, checking password");
                 // Verify password directly (more efficient for APIs)
                 var isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
                 if (!isPasswordValid)
                 {
-                    Console.WriteLine("Password invalid");
+                    _logger.LogWarning("Password invalid");
                     return Unauthorized(new { Message = "Invalid email or password" });
                 }
 
-                Console.WriteLine("Password valid, generating token");
+                _logger.LogInformation("Password valid, generating token");
                 // Update last login time
                 user.LastLoginTime = DateTime.Now;
                 await _userManager.UpdateAsync(user);
 
                 // Generate token
                 var token = await GenerateJwtToken(user);
-                Console.WriteLine("Login successful");
+                _logger.LogInformation("Login successful");
                 return Ok(token);
             }
             catch (Exception ex)
             {
                 // Log the exception
-                Console.WriteLine($"Login error: {ex}");
+                _logger.LogError($"Login error: {ex}");
                 return StatusCode(500, new { Message = "An error occurred during login. Please try again." });
             }
         }
@@ -105,6 +110,71 @@ namespace QuizApp.Api.Controllers
             return Ok(token);
         }
 
+        // POST: api/auth/forgot-password
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                return Ok(new { Message = "If that email is registered, we've sent a password reset link." });
+            }
+
+            // Generate the reset token
+            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+            // In a real application, you would send an email with a link to reset the password
+            // But for the API, we can return the token directly (not ideal for production)
+            var resetUrl = $"{Request.Scheme}://{Request.Host}/api/auth/reset-password?code={code}";
+
+            return Ok(new
+            {
+                Message = "Password reset instructions have been sent.",
+                ResetCode = code, // In a real app, you would not return this directly
+                ResetUrl = resetUrl // Example URL for demonstration
+            });
+        }
+
+        // POST: api/auth/reset-password
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                return Ok(new { Message = "Password has been reset successfully" });
+            }
+
+            // Decode the reset code from Base64Url
+            var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Code));
+
+            var result = await _userManager.ResetPasswordAsync(user, code, model.Password);
+            if (result.Succeeded)
+            {
+                return Ok(new { Message = "Password has been reset successfully. You can now log in with your new password." });
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return BadRequest(ModelState);
+        }
+
         // POST: api/auth/refresh-token
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(string refreshToken)
@@ -123,11 +193,11 @@ namespace QuizApp.Api.Controllers
 
                 // Create minimal claims
                 var claims = new List<Claim>
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+                {
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                };
 
                 // Add roles as a single claim to reduce token size
                 if (userRoles.Any())
@@ -166,9 +236,36 @@ namespace QuizApp.Api.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Token generation error: {ex}");
+                _logger.LogError($"Token generation error: {ex}");
                 throw;
             }
         }
+    }
+
+    // Additional DTOs for Auth operations
+    public class ForgotPasswordDto
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+    }
+
+    public class ResetPasswordDto
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
+        public string Code { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at most {1} characters long.", MinimumLength = 8)]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+
+        [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; }
     }
 }
