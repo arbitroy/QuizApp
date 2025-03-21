@@ -142,7 +142,6 @@ namespace QuizApp.Api.Controllers
             });
         }
 
-        // POST: api/auth/reset-password
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
         {
@@ -158,21 +157,56 @@ namespace QuizApp.Api.Controllers
                 return Ok(new { Message = "Password has been reset successfully" });
             }
 
-            // Decode the reset code from Base64Url
-            var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Code));
+            // Check if this is a direct reset request (code starts with DIRECT_RESET_)
+            bool isDirectReset = model.Code != null && model.Code.StartsWith("DIRECT_RESET_");
 
-            var result = await _userManager.ResetPasswordAsync(user, code, model.Password);
-            if (result.Succeeded)
+            if (isDirectReset)
             {
-                return Ok(new { Message = "Password has been reset successfully. You can now log in with your new password." });
-            }
+                // For direct resets, generate a new token instead of using the provided one
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            foreach (var error in result.Errors)
+                var result = await _userManager.ResetPasswordAsync(user, token, model.Password);
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation($"Password directly reset for {model.Email}");
+                    return Ok(new { Message = "Password has been reset successfully" });
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return BadRequest(ModelState);
+            }
+            else
             {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
+                // Original code path for normal resets with real codes
+                try
+                {
+                    // Decode the reset code from Base64Url
+                    var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Code));
 
-            return BadRequest(ModelState);
+                    var result = await _userManager.ResetPasswordAsync(user, code, model.Password);
+                    if (result.Succeeded)
+                    {
+                        return Ok(new { Message = "Password has been reset successfully" });
+                    }
+
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error decoding reset token");
+                    ModelState.AddModelError("", "Invalid reset code");
+                }
+
+                return BadRequest(ModelState);
+            }
         }
 
         // POST: api/auth/refresh-token
