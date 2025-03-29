@@ -109,14 +109,12 @@ namespace QuizApp.Api.Controllers
                 return NotFound("User not found");
             }
 
-            // Don't allow admins to edit themselves through this API
-            if (User.Identity?.Name == user.UserName)
+            if (!string.IsNullOrEmpty(userDto.UserName) && userDto.UserName != user.UserName)
             {
-                return BadRequest("You cannot edit your own account through this API");
+                user.UserName = userDto.UserName; // Update username directly
             }
 
-            // Update basic user info
-            if (user.Email != userDto.Email || user.UserName != userDto.UserName)
+            if (!string.IsNullOrEmpty(userDto.Email) && userDto.Email != user.Email)
             {
                 // Check if email is already taken
                 var existingUser = await _userManager.FindByEmailAsync(userDto.Email);
@@ -126,7 +124,8 @@ namespace QuizApp.Api.Controllers
                 }
 
                 user.Email = userDto.Email;
-                user.UserName = userDto.Email; // Use email as username
+                // Remove this line to allow independent username:
+                // user.UserName = userDto.Email; 
                 user.EmailConfirmed = true;
             }
 

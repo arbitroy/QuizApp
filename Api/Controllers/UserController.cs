@@ -79,8 +79,14 @@ namespace QuizApp.Api.Controllers
                 return NotFound("User not found");
             }
 
+            // Check if username should be updated independently
+            if (!string.IsNullOrEmpty(model.UserName) && model.UserName != user.UserName)
+            {
+                user.UserName = model.UserName; // Update username directly
+            }
+
             // Check if email is changed and already exists
-            if (model.Email != user.Email)
+            if (!string.IsNullOrEmpty(model.Email) && model.Email != user.Email)
             {
                 var existingUser = await _userManager.FindByEmailAsync(model.Email);
                 if (existingUser != null && existingUser.Id != user.Id)
@@ -89,7 +95,8 @@ namespace QuizApp.Api.Controllers
                 }
 
                 user.Email = model.Email;
-                user.UserName = model.Email; // Username is the email
+                // Keep this if you want email to update username, but make it conditional
+                // user.UserName = model.Email; 
                 user.EmailConfirmed = true;
             }
 
@@ -303,6 +310,8 @@ namespace QuizApp.Api.Controllers
         [Required]
         [EmailAddress]
         public string Email { get; set; }
+
+        public string UserName { get; set; }  // Add this property
 
         public bool UpdatePassword { get; set; }
 
