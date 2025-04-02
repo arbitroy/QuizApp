@@ -1,0 +1,92 @@
+﻿@page
+@model QuizApp.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow animate-on-scroll">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h1 class="h4 mb-0">@ViewData["Title"]</h1>
+                </div>
+                <div class="card-body">
+                    @if (Model.ShowResetSuccess)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            Your password has been reset successfully. You can now log in with your new password.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+                    {
+                        var statusMessageClass = Model.StatusMessage.StartsWith("Error") ? "danger" : "success";
+                        <div class="alert alert-@statusMessageClass alert-dismissible fade show" role="alert">
+                            @Model.StatusMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form id="account" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Email" class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
+                                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" asp-for="Input.RememberMe" />
+                                <label class="form-check-label" asp-for="Input.RememberMe">Remember me</label>
+                            </div>
+                            <div>
+                                <a asp-page="./DirectPasswordReset" asp-route-email="@Model.Input.Email" class="text-primary">
+                                    Forgot your password?
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Log in</button>
+                            <a asp-page="./Register" class="btn btn-outline-secondary">Register if you don't have an account</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // This script will enable the "Forgot password?" link to use the current email value
+        $(document).ready(function() {
+            $('#Input_Email').on('change', function() {
+                const email = $(this).val();
+                $('a[asp-page="./DirectPasswordReset"]').attr('href', '/Account/DirectPasswordReset?email=' + encodeURIComponent(email));
+            });
+        });
+    </script>
+}

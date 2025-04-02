@@ -240,6 +240,14 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapRazorPages();
 
+app.MapGet("/Identity/Account/Login", (HttpContext context) => {
+    return Results.Redirect("/Account/Login");
+});
+
+app.MapGet("/Identity/Account/Register", (HttpContext context) => {
+    return Results.Redirect("/Account/Register");
+});
+
 // Add authentication check endpoint for client-side validation
 app.MapGet("/api/auth/check", (HttpContext context) => {
     if (context.User.Identity?.IsAuthenticated != true)
